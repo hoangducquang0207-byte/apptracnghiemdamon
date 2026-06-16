@@ -1,0 +1,6 @@
+{
+  "name": "Trắc nghiệm nhanh đa môn",
+  "description": "Ứng dụng trắc nghiệm nhanh đa môn (Toán, Khoa học tự nhiên, Tiếng Anh) hỗ trợ tạo đề thi tự động bằng AI, quản lý kho đề kiểm tra và theo dõi tiến trình học tập.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
