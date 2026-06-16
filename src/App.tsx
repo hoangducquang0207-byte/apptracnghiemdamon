@@ -433,6 +433,60 @@ export default function App() {
     }
   }, [currentSubjectId, activeSubject]);
 
+  // TỰ ĐỘNG KHỞI TẠO LỚP TIÊU CHUẨN CHO TỪNG GRADE CỦA CÁC MÔN HỌC HIỆN TẠI (GIẢI QUYẾT LỖI KHI CLONE/SHARE APP LÊN GITHUB)
+  useEffect(() => {
+    if (subjects && subjects.length > 0) {
+      const neededClasses: string[] = [];
+      subjects.forEach(sub => {
+        if (sub.grade) {
+          neededClasses.push(`${sub.grade}A1`);
+          neededClasses.push(`${sub.grade}A2`);
+          neededClasses.push(`${sub.grade}A3`);
+        }
+      });
+      // Thu thập thêm từ danh sách học sinh hiện có
+      if (students) {
+        students.forEach(s => {
+          if (s.className) {
+            neededClasses.push(s.className.trim().toUpperCase());
+          }
+        });
+      }
+
+      // Lọc ra các lớp học chưa có trong danh sách classes
+      const toAdd = neededClasses.filter(cls => !classes.includes(cls));
+      if (toAdd.length > 0) {
+        setClasses(prev => {
+          const combined = [...prev, ...toAdd];
+          return Array.from(new Set(combined));
+        });
+      }
+    }
+  }, [subjects, students, classes]);
+
+  // ĐỒNG BỘ CHUẨN LỚP HỌC TRÊN CỔNG TRA CỨU HỌC SINH KHI ĐỔI MÔN HOẶC KHI DANH SÁCH LỚP CẬP NHẬT
+  useEffect(() => {
+    const subj = subjects.find(s => s.id === portalSubjectId);
+    if (subj) {
+      const activeGradeClasses = classes.filter(c => {
+        if (!c || !subj.grade) return false;
+        const match = c.match(/(\d+)/);
+        if (match) return match[1] === subj.grade;
+        return c.startsWith(subj.grade);
+      });
+      if (activeGradeClasses.length > 0) {
+        if (!activeGradeClasses.includes(portalClass)) {
+          setPortalClass(activeGradeClasses[0]);
+        }
+      } else {
+        const fall = `${subj.grade}A1`;
+        if (portalClass !== fall) {
+          setPortalClass(fall);
+        }
+      }
+    }
+  }, [portalSubjectId, classes, subjects, portalClass]);
+
   // UPDATE DEFAULT CLASSNAME FOR ASSIGN TEST ON SUBJECT CHANGE OR CLASSES CHANGE
   useEffect(() => {
     if (activeSubject) {
