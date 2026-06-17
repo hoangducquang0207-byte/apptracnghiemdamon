@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { Test, SubjectConfig, Question } from '../types';
+import { Test, SubjectConfig, Question, normalizeQuestion } from '../types';
 import { MathRenderer } from './MathRenderer';
 import { Printer, Eye, EyeOff, X, FileText, CheckCircle2, Download } from 'lucide-react';
 
@@ -72,20 +72,7 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
 
   const handleDownloadHtml = (autoPrint = false) => {
     // Process and normalize questions as done in rendering
-    const normalizedQuestions = (test.questions || []).map(q => {
-      if (q.type === 'MCQ') {
-        const hasNoOptions = !q.options || q.options.length === 0 || q.options.every(o => !o || o.replace(/^[A-H]\.\s*/, '').trim() === '');
-        const isTfAnswer = q.correctAnswer === 'Đúng' || q.correctAnswer === 'Sai' || q.correctAnswer === 'True' || q.correctAnswer === 'False';
-        if (hasNoOptions || isTfAnswer) {
-          return {
-            ...q,
-            type: 'TRUE_FALSE' as const,
-            options: undefined
-          };
-        }
-      }
-      return q;
-    });
+    const normalizedQuestions = (test.questions || []).map(normalizeQuestion);
 
     const mcqQs = normalizedQuestions.filter(q => q.type === 'MCQ');
     const tfQs = normalizedQuestions.filter(q => q.type === 'TRUE_FALSE');
@@ -559,20 +546,7 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
           <div className="space-y-6 md:space-y-8 text-neutral-800 text-[13px] md:text-sm print:text-black">
             
             {(() => {
-              const normalizedQuestions = (test.questions || []).map(q => {
-                if (q.type === 'MCQ') {
-                  const hasNoOptions = !q.options || q.options.length === 0 || q.options.every(o => !o || o.replace(/^[A-H]\.\s*/, '').trim() === '');
-                  const isTfAnswer = q.correctAnswer === 'Đúng' || q.correctAnswer === 'Sai' || q.correctAnswer === 'True' || q.correctAnswer === 'False';
-                  if (hasNoOptions || isTfAnswer) {
-                    return {
-                      ...q,
-                      type: 'TRUE_FALSE' as const,
-                      options: undefined
-                    };
-                  }
-                }
-                return q;
-              });
+              const normalizedQuestions = (test.questions || []).map(normalizeQuestion);
 
               const mcqQs = normalizedQuestions.filter(q => q.type === 'MCQ');
               const tfQs = normalizedQuestions.filter(q => q.type === 'TRUE_FALSE');

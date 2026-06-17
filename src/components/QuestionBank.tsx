@@ -2861,7 +2861,30 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
                 <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Định dạng câu hỏi</label>
                 <select
                   value={localEditingQuestion.type}
-                  onChange={(e) => setLocalEditingQuestion({ ...localEditingQuestion, type: e.target.value as QuestionType })}
+                  onChange={(e) => {
+                    const newType = e.target.value as QuestionType;
+                    const updated: any = { ...localEditingQuestion, type: newType };
+                    if (newType === 'TRUE_FALSE') {
+                      if (!localEditingQuestion.options || localEditingQuestion.options.length !== 4) {
+                        updated.options = ['Phát biểu a', 'Phát biểu b', 'Phát biểu c', 'Phát biểu d'];
+                      }
+                      if (!localEditingQuestion.correctAnswer || !localEditingQuestion.correctAnswer.includes(',')) {
+                        updated.correctAnswer = 'Đúng,Đúng,Đúng,Đúng';
+                      }
+                    } else if (newType === 'MCQ') {
+                      if (!localEditingQuestion.options || localEditingQuestion.options.length !== 4) {
+                        updated.options = ['A. ', 'B. ', 'C. ', 'D. '];
+                      }
+                      if (!localEditingQuestion.correctAnswer || localEditingQuestion.correctAnswer.includes(',')) {
+                        updated.correctAnswer = 'A';
+                      }
+                    } else {
+                      if (localEditingQuestion.correctAnswer.includes(',')) {
+                        updated.correctAnswer = 'đáp án';
+                      }
+                    }
+                    setLocalEditingQuestion(updated);
+                  }}
                   className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 cursor-pointer focus:outline-none"
                 >
                   <option value="MCQ">Trắc nghiệm bốn lựa chọn (MCQ)</option>
@@ -2972,6 +2995,74 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
               </div>
             )}
 
+            {localEditingQuestion.type === 'TRUE_FALSE' && (
+              <div className="flex flex-col gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200/50">
+                <span className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-wide">
+                  Thiết lập 4 phát biểu Đúng / Sai (Mục a, b, c, d)
+                </span>
+                <div className="flex flex-col gap-2.5">
+                  {[0, 1, 2, 3].map(idx => {
+                    const label = idx === 0 ? 'a' : idx === 1 ? 'b' : idx === 2 ? 'c' : 'd';
+                    const list = localEditingQuestion.options && localEditingQuestion.options.length === 4 
+                      ? localEditingQuestion.options 
+                      : ['Phát biểu a', 'Phát biểu b', 'Phát biểu c', 'Phát biểu d'];
+                    const currentAnsList = (localEditingQuestion.correctAnswer || 'Đúng,Đúng,Đúng,Đúng').split(',');
+                    const statementAns = currentAnsList[idx] || 'Đúng';
+
+                    return (
+                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2 bg-white p-2.5 rounded-lg border border-slate-150">
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="font-extrabold text-indigo-700 uppercase">{label})</span>
+                        </div>
+                        <input 
+                          type="text"
+                          required
+                          value={list[idx] || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const nextOptions = [...list];
+                            nextOptions[idx] = val;
+                            setLocalEditingQuestion({ ...localEditingQuestion, options: nextOptions });
+                          }}
+                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                          placeholder={`Nội dung phát biểu ${label}...`}
+                        />
+                        <div className="flex bg-slate-150 rounded-lg p-0.5 shrink-0 direct-tf-select-box">
+                          {['Đúng', 'Sai'].map(val => {
+                            const isSelect = statementAns === val;
+                            return (
+                              <button
+                                key={val}
+                                type="button"
+                                onClick={() => {
+                                  const nextAnsList = [...currentAnsList];
+                                  while (nextAnsList.length < 4) nextAnsList.push('Đúng');
+                                  nextAnsList[idx] = val;
+                                  setLocalEditingQuestion({ 
+                                    ...localEditingQuestion, 
+                                    correctAnswer: nextAnsList.join(',') 
+                                  });
+                                }}
+                                className={`px-2.5 py-1 text-[10px] font-black rounded-md cursor-pointer transition-all ${
+                                  isSelect 
+                                    ? val === 'Đúng' 
+                                      ? 'bg-emerald-600 text-white shadow-xs' 
+                                      : 'bg-rose-600 text-white shadow-xs'
+                                    : 'text-slate-500 hover:text-slate-700 bg-transparent'
+                                }`}
+                              >
+                                {val}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Answer Input and Tags */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -2988,14 +3079,9 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
                     <option value="D">D chính xác</option>
                   </select>
                 ) : localEditingQuestion.type === 'TRUE_FALSE' ? (
-                  <select
-                    value={localEditingQuestion.correctAnswer}
-                    onChange={(e) => setLocalEditingQuestion({ ...localEditingQuestion, correctAnswer: e.target.value })}
-                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
-                  >
-                    <option value="Đúng">Đúng</option>
-                    <option value="Sai">Sai</option>
-                  </select>
+                  <div className="p-2 bg-indigo-50 border border-indigo-150 text-indigo-900 rounded-xl text-xs font-black flex items-center justify-center text-center leading-normal">
+                     Đã đồng bộ ở 4 phát biểu trên: {localEditingQuestion.correctAnswer}
+                  </div>
                 ) : (
                   <input 
                     type="text" 

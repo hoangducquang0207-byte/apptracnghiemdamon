@@ -4,7 +4,8 @@ import 'katex/dist/katex.min.css';
 import { formatScore } from './utils/numberFormat';
 import { 
   QuestionType, CognitiveLevel, UserRole, SubjectConfig, Question, Test, 
-  Assignment, QuizAttempt, StudentProgress, Student, generateStudentPassword
+  Assignment, QuizAttempt, StudentProgress, Student, generateStudentPassword,
+  normalizeQuestion
 } from './types';
 import { 
   DEFAULT_SUBJECTS, DEFAULT_QUESTIONS, DEFAULT_STUDENTS, DEFAULT_TESTS, 
@@ -39,7 +40,9 @@ export default function App() {
   const [questions, setQuestions] = useState<Question[]>(() => {
     const saved = localStorage.getItem('quickquiz_questions');
     const rawQs: Question[] = saved ? JSON.parse(saved) : DEFAULT_QUESTIONS;
-    return rawQs.filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK');
+    return rawQs
+      .filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK')
+      .map(normalizeQuestion);
   });
 
   const [tests, setTests] = useState<Test[]>(() => {
@@ -47,7 +50,9 @@ export default function App() {
     const rawTests: Test[] = saved ? JSON.parse(saved) : DEFAULT_TESTS;
     return rawTests.map(t => ({
       ...t,
-      questions: (t.questions || []).filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK')
+      questions: (t.questions || [])
+        .filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK')
+        .map(normalizeQuestion)
     }));
   });
 
@@ -924,20 +929,7 @@ export default function App() {
         <div class="guideline">(Thí sinh làm bài trực tiếp vào phiếu trả lời hoặc giấy thi. Thí sinh không được sử dụng tài liệu)</div>
     `;
 
-    const normalizedQuestions = (test.questions || []).map(q => {
-      if (q.type === 'MCQ') {
-        const hasNoOptions = !q.options || q.options.length === 0 || q.options.every(o => !o || o.replace(/^[A-H]\.\s*/, '').trim() === '');
-        const isTfAnswer = q.correctAnswer === 'Đúng' || q.correctAnswer === 'Sai' || q.correctAnswer === 'True' || q.correctAnswer === 'False';
-        if (hasNoOptions || isTfAnswer) {
-          return {
-            ...q,
-            type: 'TRUE_FALSE' as const,
-            options: undefined
-          };
-        }
-      }
-      return q;
-    });
+    const normalizedQuestions = (test.questions || []).map(normalizeQuestion);
 
     const mcqQs = normalizedQuestions.filter(q => q.type === 'MCQ');
     const tfQs = normalizedQuestions.filter(q => q.type === 'TRUE_FALSE');
