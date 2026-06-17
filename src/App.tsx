@@ -18,7 +18,7 @@ import { QuestionBank } from './components/QuestionBank';
 import { TestPreviewModal } from './components/TestPreviewModal';
 import { 
   BookOpen, Award, Users, Settings, FileText, Brain, History, 
-  TrendingUp, Plus, Trash2, Edit, Check, X, Key, Download, 
+  TrendingUp, Plus, Trash2, Edit, Check, X, Key, Download, Upload, 
   RefreshCw, Play, CheckCircle, AlertTriangle, FileSpreadsheet, 
   ExternalLink, LogIn, ChevronRight, HelpCircle, FileImage,
   Volume2, VolumeX, Printer
@@ -79,7 +79,26 @@ export default function App() {
 
   const [classes, setClasses] = useState<string[]>(() => {
     const saved = localStorage.getItem('quickquiz_classes');
-    return saved ? JSON.parse(saved) : ['6A1', '6A2', '6A3'];
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    // Clean initial load (e.g., cloned/exported on GitHub): Harvest all classes from default students & default subjects
+    const initial = new Set<string>(['6A1', '6A2', '6A3']);
+    DEFAULT_STUDENTS.forEach(s => {
+      if (s.className) {
+        initial.add(s.className.trim().toUpperCase());
+      }
+    });
+    DEFAULT_SUBJECTS.forEach(sub => {
+      if (sub.grade) {
+        initial.add(`${sub.grade}A1`);
+        initial.add(`${sub.grade}A2`);
+        initial.add(`${sub.grade}A3`);
+      }
+    });
+    return Array.from(initial).sort();
   });
 
   const [showAddSubjectModal, setShowAddSubjectModal] = useState<boolean>(false);
@@ -433,38 +452,7 @@ export default function App() {
     }
   }, [currentSubjectId, activeSubject]);
 
-  // TỰ ĐỘNG KHỞI TẠO LỚP TIÊU CHUẨN CHO TỪNG GRADE CỦA CÁC MÔN HỌC HIỆN TẠI (GIẢI QUYẾT LỖI KHI CLONE/SHARE APP LÊN GITHUB)
-  useEffect(() => {
-    if (subjects && subjects.length > 0) {
-      const neededClasses: string[] = [];
-      subjects.forEach(sub => {
-        if (sub.grade) {
-          neededClasses.push(`${sub.grade}A1`);
-          neededClasses.push(`${sub.grade}A2`);
-          neededClasses.push(`${sub.grade}A3`);
-        }
-      });
-      // Thu thập thêm từ danh sách học sinh hiện có
-      if (students) {
-        students.forEach(s => {
-          if (s.className) {
-            neededClasses.push(s.className.trim().toUpperCase());
-          }
-        });
-      }
-
-      // Lọc ra các lớp học chưa có trong danh sách classes
-      const toAdd = neededClasses.filter(cls => !classes.includes(cls));
-      if (toAdd.length > 0) {
-        setClasses(prev => {
-          const combined = [...prev, ...toAdd];
-          return Array.from(new Set(combined));
-        });
-      }
-    }
-  }, [subjects, students, classes]);
-
-  // ĐỒNG BỘ CHUẨN LỚP HỌC TRÊN CỔNG TRA CỨU HỌC SINH KHI ĐỔI MÔN HOẶC KHI DANH SÁCH LỚP CẬP NHẬT
+  // ĐỒNG BỘ CHUẨN LỚP HỌC TRÊN CỔNG TRA CỨU HỌC SINH MÀ KHÔNG GÂY VÒNG LẶP TUẦN HOÀN (TRÁNH LỖI ĐỌC TRÙNG PORTAL_CLASS)
   useEffect(() => {
     const subj = subjects.find(s => s.id === portalSubjectId);
     if (subj) {
@@ -474,18 +462,17 @@ export default function App() {
         if (match) return match[1] === subj.grade;
         return c.startsWith(subj.grade);
       });
-      if (activeGradeClasses.length > 0) {
-        if (!activeGradeClasses.includes(portalClass)) {
-          setPortalClass(activeGradeClasses[0]);
-        }
-      } else {
-        const fall = `${subj.grade}A1`;
-        if (portalClass !== fall) {
-          setPortalClass(fall);
-        }
+      
+      const defaultClass = activeGradeClasses[0] || `${subj.grade}A1`;
+      const isCurrentClassValid = activeGradeClasses.includes(portalClass) || portalClass === `${subj.grade}A1`;
+
+      if (!isCurrentClassValid) {
+        setPortalClass(defaultClass);
+        setPortalStudentId('');
+        setPortalCustomName('');
       }
     }
-  }, [portalSubjectId, classes, subjects, portalClass]);
+  }, [portalSubjectId, classes, subjects]);
 
   // UPDATE DEFAULT CLASSNAME FOR ASSIGN TEST ON SUBJECT CHANGE OR CLASSES CHANGE
   useEffect(() => {
@@ -1184,6 +1171,20 @@ export default function App() {
 
     setSubjects(prev => [...prev, newSubject]);
     setCurrentSubjectId(finalId);
+
+    // Tự động khởi tạo lớp học cho khối tương ứng nếu chưa tồn tại
+    if (newSubject.grade) {
+      setClasses(prev => {
+        const c1 = `${newSubject.grade}A1`;
+        const c2 = `${newSubject.grade}A2`;
+        const c3 = `${newSubject.grade}A3`;
+        const nextClasses = [...prev];
+        if (!nextClasses.includes(c1)) nextClasses.push(c1);
+        if (!nextClasses.includes(c2)) nextClasses.push(c2);
+        if (!nextClasses.includes(c3)) nextClasses.push(c3);
+        return nextClasses.sort();
+      });
+    }
     
     // Initialize empty completed lessons progress for the new subject
     setProgress(prev => [...prev, { subjectId: finalId, completedLessons: [] }]);
@@ -1308,6 +1309,22 @@ export default function App() {
     });
 
     setSubjects(prev => [...prev, ...newSubjectsList]);
+    
+    // Tự động khởi tạo lớp học cho các khối đã chọn trong cơ chế tạo nhanh
+    if (bulkSelectedGrades && bulkSelectedGrades.length > 0) {
+      setClasses(prev => {
+        const nextClasses = [...prev];
+        bulkSelectedGrades.forEach(g => {
+          const c1 = `${g}A1`;
+          const c2 = `${g}A2`;
+          const c3 = `${g}A3`;
+          if (!nextClasses.includes(c1)) nextClasses.push(c1);
+          if (!nextClasses.includes(c2)) nextClasses.push(c2);
+          if (!nextClasses.includes(c3)) nextClasses.push(c3);
+        });
+        return nextClasses.sort();
+      });
+    }
     setQuestions(prev => [...newQuestionsList, ...prev]);
     setProgress(prev => [...prev, ...newProgressList]);
 
@@ -1475,6 +1492,103 @@ export default function App() {
     setShowQuestionModal(false);
     setEditingQuestion(null);
     showToast('Đã ghi nhận câu hỏi thành công vào kho ngân hàng dữ liệu!', 'success');
+  };
+
+  // HỆ THỐNG SAO LƯU & DI TRÚ CƠ SỞ DỮ LIỆU ĐA LỚP (GIẢI QUYẾT TRIỆT ĐỂ CHIA SẺ GITHUB)
+  const handleExportSystemBackup = () => {
+    try {
+      const data = {
+        system: 'QuickQuizBackup',
+        version: '1.0',
+        timestamp: new Date().toISOString(),
+        subjects,
+        classes,
+        students,
+        questions,
+        tests,
+        assignments,
+        attempts,
+        classPasswords,
+        teacherPasscode
+      };
+      
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', url);
+      downloadAnchor.setAttribute('download', `QuickQuiz_Backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      URL.revokeObjectURL(url);
+      
+      showToast('Tải danh sách và dữ liệu sao lưu (.JSON) thành công!', 'success');
+    } catch (err) {
+      showToast('Lỗi khi sao lưu dữ liệu.', 'error');
+    }
+  };
+
+  const handleImportSystemBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target?.result as string);
+          if (parsed.system !== 'QuickQuizBackup') {
+            showToast('Tệp tin (.json) không phải là định dạng của QuickQuiz!', 'error');
+            return;
+          }
+          
+          if (parsed.subjects) {
+            setSubjects(parsed.subjects);
+            localStorage.setItem('quickquiz_subjects', JSON.stringify(parsed.subjects));
+          }
+          if (parsed.classes) {
+            setClasses(parsed.classes);
+            localStorage.setItem('quickquiz_classes', JSON.stringify(parsed.classes));
+          }
+          if (parsed.students) {
+            setStudents(parsed.students);
+            localStorage.setItem('quickquiz_students', JSON.stringify(parsed.students));
+          }
+          if (parsed.questions) {
+            setQuestions(parsed.questions);
+            localStorage.setItem('quickquiz_questions', JSON.stringify(parsed.questions));
+          }
+          if (parsed.tests) {
+            setTests(parsed.tests);
+            localStorage.setItem('quickquiz_tests', JSON.stringify(parsed.tests));
+          }
+          if (parsed.assignments) {
+            setAssignments(parsed.assignments);
+            localStorage.setItem('quickquiz_assignments', JSON.stringify(parsed.assignments));
+          }
+          if (parsed.attempts) {
+            setAttempts(parsed.attempts);
+            localStorage.setItem('quickquiz_attempts', JSON.stringify(parsed.attempts));
+          }
+          if (parsed.classPasswords) {
+            setClassPasswords(parsed.classPasswords);
+            localStorage.setItem('quickquiz_class_passwords', JSON.stringify(parsed.classPasswords));
+          }
+          if (parsed.teacherPasscode) {
+            setTeacherPasscode(parsed.teacherPasscode);
+            localStorage.setItem('quickquiz_teacher_passcode', parsed.teacherPasscode);
+          }
+          
+          showToast('Phục hồi toàn bộ dữ liệu thành công! Trình quản lý đang tự làm mới...', 'success');
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } catch (error) {
+          showToast('Lỗi phân tích cú pháp dữ liệu tệp tin JSON!', 'error');
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
   };
 
   // TOTAL PROGRESS COMPUTED stats
@@ -1688,8 +1802,9 @@ export default function App() {
                 <select
                   value={portalSubjectId}
                   onChange={(e) => {
-                    setPortalSubjectId(e.target.value);
-                    const subj = subjects.find(s => s.id === e.target.value);
+                    const nextSubjId = e.target.value;
+                    setPortalSubjectId(nextSubjId);
+                    const subj = subjects.find(s => s.id === nextSubjId);
                     if (subj) {
                       const matchingClasses = classes.filter(c => {
                         if (!c || !subj.grade) return false;
@@ -1699,6 +1814,8 @@ export default function App() {
                       });
                       const firstClass = matchingClasses[0] || (subj.grade + 'A1');
                       setPortalClass(firstClass);
+                      setPortalStudentId('');
+                      setPortalCustomName('');
                     }
                   }}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
@@ -1714,17 +1831,27 @@ export default function App() {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">2. CHỌN LỚP CỦA EM</label>
                 <select
                   value={portalClass}
-                  onChange={(e) => setPortalClass(e.target.value)}
+                  onChange={(e) => {
+                    setPortalClass(e.target.value);
+                    setPortalStudentId('');
+                    setPortalCustomName('');
+                  }}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 >
-                  {classes.filter(cls => {
+                  {(() => {
                     const subj = subjects.find(s => s.id === portalSubjectId);
-                    if (!subj) return true;
-                    if (!cls || !subj.grade) return false;
-                    const match = cls.match(/(\d+)/);
-                    if (match) return match[1] === subj.grade;
-                    return cls.startsWith(subj.grade);
-                  }).map(cls => (
+                    if (!subj) return [];
+                    const filtered = classes.filter(cls => {
+                      if (!cls || !subj.grade) return false;
+                      const match = cls.match(/(\d+)/);
+                      if (match) return match[1] === subj.grade;
+                      return cls.startsWith(subj.grade);
+                    });
+                    if (filtered.length === 0) {
+                      return [`${subj.grade}A1`, `${subj.grade}A2`, `${subj.grade}A3`].map(x => x); // Default fallbacks
+                    }
+                    return filtered;
+                  })().map(cls => (
                     <option key={cls} value={cls}>Lớp học {cls}</option>
                   ))}
                 </select>
@@ -4252,37 +4379,96 @@ export default function App() {
         </div>
       )}
 
-      {/* ==================== GLOBAL MODAL: GEMINI API KEY INPUT ==================== */}
+      {/* ==================== GLOBAL MODAL: SYSTEM SETTINGS & DATA MIGRATION ==================== */}
       {showKeyModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl flex flex-col gap-4 animate-fadeIn">
-            <h3 className="font-black text-slate-800 text-base md:text-lg flex items-center gap-1.5">
-              🔑 CÀI ĐẶT BÍ MẬT API KEY GEMINI
-            </h3>
-            <p className="text-xs text-slate-500 leading-normal">
-              Cung cấp API Key riêng tư của em để bứt phá rèn luyện tạo đề thi độc đáo và phân tích tự học của AI.
-            </p>
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-sm md:max-w-md w-full shadow-2xl flex flex-col gap-4 animate-fadeIn">
+            
+            {/* Header */}
+            <div className="flex justify-between items-start border-b border-slate-100 pb-2.5">
+              <div>
+                <h3 className="font-extrabold text-slate-800 text-sm md:text-base flex items-center gap-1.5 uppercase">
+                  ⚙️ CÀI ĐẶT HỆ THỐNG & DI TRÚ DỮ LIỆU
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5 font-semibold">Cấu hình API Key, Đồng bộ dữ liệu để chia sẻ lên GitHub.</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowKeyModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold transition-all p-0.5 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
 
-            <input 
-              type="password"
-              value={apiKey}
-              onChange={(e) => {
-                setApiKey(e.target.value);
-                localStorage.setItem('quickquiz_gemini_key', e.target.value);
-              }}
-              placeholder="Nhập khóa API (E.g. AIzaSy...)"
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            {/* Section 1: API KEY */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10.5px] font-black text-emerald-800 uppercase tracking-wide flex items-center gap-1">
+                🔑 1. Khóa API Key Gemini (AI) riêng tư
+              </span>
+              <p className="text-[11px] text-slate-500 leading-normal">
+                Cung cấp API Key mật của thầy cô để bứt phá rèn luyện tạo đề thi độc lập và phân tích học tập tự nhiên của AI.
+              </p>
+              <input 
+                type="password"
+                value={apiKey}
+                onChange={(e) => {
+                  setApiKey(e.target.value);
+                  localStorage.setItem('quickquiz_gemini_key', e.target.value);
+                }}
+                placeholder="Nhập khóa API (E.g. AIzaSy...)"
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              />
+              <p className="text-[10px] text-amber-700 bg-amber-50 rounded-xl p-2.5 leading-relaxed border border-amber-100">
+                💡 Lưu ý: Hệ thống chỉ lưu khoá trong trình duyệt của bạn bảo mật tốt. Nếu trống hệ thống dùng khoá server mặc định.
+              </p>
+            </div>
 
-            <p className="text-[10px] text-amber-700 bg-amber-50 rounded-xl p-3 leading-relaxed border border-amber-100">
-              💡 Lưu ý: Hệ thống chỉ lưu khoá trong LocalStorage trình duyệt cá nhân của em bảo mật tốt. Nếu em để trống hệ thống sẽ chuyển sang dùng hệ thống khoá server mặc định.
-            </p>
+            <hr className="border-slate-100" />
 
+            {/* Section 2: BACKUP & RESTORE */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10.5px] font-black text-indigo-800 uppercase tracking-wide flex items-center gap-1">
+                💾 2. Đồng bộ & đồng nhất dữ liệu (Dành cho GitHub Pages)
+              </span>
+              <p className="text-[11px] text-slate-500 leading-normal">
+                Để giữ nguyên danh sách lớp, học sinh, đề thi, mật khẩu đã sửa khi các thầy cô chia sẻ chương trình lên <strong>GitHub.com</strong> hoặc thiết bị khác:
+              </p>
+
+              <div className="grid grid-cols-2 gap-3.5 mt-1">
+                {/* Export Button */}
+                <button
+                  type="button"
+                  onClick={handleExportSystemBackup}
+                  className="py-2.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-150 transition-all flex items-center justify-center gap-1 text-center cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Xuất File Backup (.json)
+                </button>
+
+                {/* Import Label Form Element */}
+                <label className="py-2.5 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-250 transition-all flex items-center justify-center gap-1.5 text-center cursor-pointer relative">
+                  <Upload className="w-3.5 h-3.5 text-slate-500" />
+                  Nhập File Backup (.json)
+                  <input 
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportSystemBackup}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                </label>
+              </div>
+              <p className="text-[9.5px] text-slate-400 leading-relaxed font-semibold">
+                ⚠️ Cảnh báo: Việc tải file cũ sẽ thay thế tất cả dữ liệu rèn luyện, ngân hàng câu hỏi hiện tại trên trình duyệt này.
+              </p>
+            </div>
+
+            {/* Footer buttons */}
             <button
-              onClick={() => { setShowKeyModal(false); showToast('Cập nhật API Key thành công!', 'success'); }}
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all"
+              onClick={() => { setShowKeyModal(false); showToast('Đóng cài đặt hệ thống thành công!', 'info'); }}
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl transition-all uppercase tracking-normal"
             >
-              ✓ Đồng Ý Cài Đặt
+              ✓ Xác Nhận & Đóng
             </button>
           </div>
         </div>
