@@ -1642,15 +1642,15 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {/* API MODAL TRIGGER */}
+            {/* API & SYSTEM SETTINGS GEAR TRIGGER */}
             <button
               onClick={() => setShowKeyModal(true)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
-                apiKey ? 'bg-emerald-700 text-emerald-100 hover:bg-emerald-600' : 'bg-amber-600 text-white hover:bg-amber-500'
-              }`}
+              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+              id="header-settings-gear-btn"
+              title="Cài đặt hệ thống (Sao lưu và Gemini API)"
             >
-              <Key className="w-3.5 h-3.5" />
-              {apiKey ? 'Sẵn sàng AI' : 'Cài Gemini API'}
+              <Settings className="w-4 h-4 animate-spin-slow" />
+              <span>Cấu hình & Cài đặt hệ thống (Sao lưu) ⚙️</span>
             </button>
 
             {/* COMPACT ACTIVE SUBJECT BADGE */}
@@ -2086,6 +2086,22 @@ export default function App() {
           <nav className="bg-white rounded-3xl shadow-sm border border-slate-100 p-2.5 flex flex-col gap-1">
             <span className="text-[10px] font-black text-slate-400 px-3 py-1.5 uppercase tracking-wider">MỤC CHUYÊN BIỆT</span>
             
+            {role === 'teacher' && (
+              <button
+                onClick={() => setShowKeyModal(true)}
+                className="w-full text-left px-3.5 py-3 rounded-xl transition-all bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 border border-amber-500/25 flex items-center gap-2 mb-2 group relative cursor-pointer"
+                id="sidebar-settings-gear-btn"
+                title="Bánh răng cài đặt (Cài đặt hệ thống)"
+              >
+                <Settings className="w-4 h-4 text-amber-600 group-hover:rotate-45 transition-transform duration-350" />
+                <div className="flex flex-col text-left leading-tight">
+                  <span className="font-extrabold text-[11px] text-amber-950 uppercase">Cài đặt hệ thống ⚙️</span>
+                  <span className="text-[9.5px] text-amber-700/80 font-bold">Sao lưu, Đồng bộ & API key</span>
+                </div>
+                <span className="ml-auto text-[9px] bg-amber-600 text-white font-black px-1.5 py-0.5 rounded-md uppercase shrink-0">Bấm Mở</span>
+              </button>
+            )}
+
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
@@ -2581,6 +2597,30 @@ export default function App() {
                       </div>
                       <div className="p-3 bg-purple-50 rounded-xl text-purple-700">✓</div>
                     </div>
+                  </div>
+
+                  {/* DIRECT BACKUP AND SETTINGS REMINDER FOR TEACHERS */}
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-200 rounded-3xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex gap-3">
+                      <div className="p-3 bg-amber-500 text-white rounded-2xl shrink-0 self-start shadow-md shadow-amber-200">
+                        <Settings className="w-5 h-5 animate-spin-slow" />
+                      </div>
+                      <div className="flex flex-col">
+                        <h4 className="font-extrabold text-amber-950 text-xs md:text-sm uppercase flex items-center gap-1.5">
+                          CÀI ĐẶT HỆ THỐNG / ĐỒNG BỘ SAO LƯU ⚙️
+                        </h4>
+                        <p className="text-[11.5px] text-amber-900/80 mt-1 leading-normal">
+                          Thầy cô có thể nhấp vào <strong>Biểu tượng bánh răng cài đặt (Cài đặt hệ thống)</strong> ở thanh điều hướng bên trái, thanh tiêu đề hoặc thông báo này để thiết lập <strong>API Key Gemini</strong> và <strong>Xuất/Nhập dữ liệu dự phòng (.JSON)</strong> giữ nguyên bài thi, danh sách lớp!
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowKeyModal(true)}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl italic select-none shadow-md shadow-amber-200 shrink-0 cursor-pointer text-center uppercase"
+                    >
+                      BẤM MỞ NGAY ⚙️
+                    </button>
                   </div>
 
                   {/* CLASSES MANAGER */}
