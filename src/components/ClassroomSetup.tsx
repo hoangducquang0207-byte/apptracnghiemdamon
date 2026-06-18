@@ -686,6 +686,29 @@ STU-004,Lê Hoàng Dung,6A3,lehoangdung@gmail.com,`;
 
       {activePanel === 'roster' && (
         <>
+          {/* COMPASSIONATE AI ESSAY GRADING HIGHLIGHT BANNER */}
+          <div className="bg-gradient-to-r from-emerald-500 via-teal-600 to-indigo-600 rounded-3xl p-5 md:p-6 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl shadow-emerald-950/10 border border-emerald-500/10">
+            <div className="space-y-1 md:max-w-2xl">
+              <span className="bg-white/20 text-white uppercase text-[9px] font-black px-2.5 py-0.5 rounded-full tracking-wider inline-block">
+                🚀 MỚI: BÀN CHẤM BÀI TỰ LUẬN CHÉP TAY QUANG HỌC (AI OCR)
+              </span>
+              <h3 className="font-extrabold text-sm md:text-base tracking-tight text-white flex items-center gap-1.5 leading-snug">
+                Hệ thống tự động nhận diện chữ viết viết tay học sinh & Chấm bài khớp chuẩn GDPT 2018!
+              </h3>
+              <p className="text-[11px] text-white/85 leading-relaxed font-medium">
+                Quét nhanh bài chép vở qua tệp hình ảnh, bóc tách chữ viết và đối chiếu với khung Yêu câu cần đạt lý thuyết môn học để đề xuất kết quả, chấm điểm chi tiết tương tác từng câu tự luận.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActivePanel('grading')}
+              className="px-5 py-3.5 bg-white hover:bg-slate-50 text-emerald-800 font-extrabold rounded-2xl transition-all shadow-lg hover:scale-[1.02] shrink-0 text-xs flex items-center gap-1.5 cursor-pointer uppercase select-none tracking-wide"
+            >
+              <PenTool className="w-4 h-4 text-emerald-600" />
+              👉 VÀO BÀN CHẤM TỰ LUẬN AI NGAY!
+            </button>
+          </div>
+
           {/* CLASS STATISTICS OVERVIEW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {classStats.map(stat => (
@@ -1087,6 +1110,31 @@ STU-004,Lê Hoàng Dung,6A3,lehoangdung@gmail.com,`;
                       #{gradingAttempt.id.substring(4, 9)}
                     </span>
                   </div>
+
+                  {/* GENERAL WORKSHEET PAGES / TEST EVIDENCE PHOTOS */}
+                  {gradingAttempt.generalWorksheetImages && gradingAttempt.generalWorksheetImages.length > 0 && (
+                    <div className="bg-emerald-50/70 border border-emerald-100 p-4 rounded-2xl flex flex-col gap-2">
+                      <span className="block text-[10px] font-black text-emerald-800 uppercase tracking-widest flex items-center gap-1 font-sans">
+                        📸 Ảnh chụp toàn bộ bài làm / viết nháp đính kèm ({gradingAttempt.generalWorksheetImages.length} ảnh)
+                      </span>
+                      <div className="grid grid-cols-2 gap-2 mt-1.5 animate-fadeIn">
+                        {gradingAttempt.generalWorksheetImages.map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="relative rounded-xl overflow-hidden border border-slate-200 shadow-3xs bg-slate-900 group">
+                            <img 
+                              src={imgUrl} 
+                              alt={`Worksheet page ${imgIdx+1}`} 
+                              className="max-h-[160px] w-full object-contain cursor-pointer transition-all hover:scale-105"
+                              onClick={() => window.open(imgUrl, '_blank')}
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="absolute bottom-1 right-1 bg-black/60 px-1.5 py-0.5 rounded text-[8px] text-white font-mono font-bold">
+                              Trang {imgIdx + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* ITERATE ESSSAY QUESTIONS */}
                   {(() => {

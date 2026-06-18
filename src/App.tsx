@@ -17,6 +17,7 @@ import { TestGenerator } from './components/TestGenerator';
 import { ClassroomSetup } from './components/ClassroomSetup';
 import { QuestionBank } from './components/QuestionBank';
 import { TestPreviewModal } from './components/TestPreviewModal';
+import { SubmissionStats } from './components/SubmissionStats';
 import { 
   BookOpen, Award, Users, Settings, FileText, Brain, History, 
   TrendingUp, Plus, Trash2, Edit, Check, X, Key, Download, Upload, 
@@ -41,7 +42,7 @@ export default function App() {
     const saved = localStorage.getItem('quickquiz_questions');
     const rawQs: Question[] = saved ? JSON.parse(saved) : DEFAULT_QUESTIONS;
     return rawQs
-      .filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK')
+      .filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK' || q.type === 'MATCHING' || q.type === 'SHORT_ESSAY')
       .map(normalizeQuestion);
   });
 
@@ -51,7 +52,7 @@ export default function App() {
     return rawTests.map(t => ({
       ...t,
       questions: (t.questions || [])
-        .filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK')
+        .filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK' || q.type === 'MATCHING' || q.type === 'SHORT_ESSAY')
         .map(normalizeQuestion)
     }));
   });
@@ -305,6 +306,7 @@ export default function App() {
   const [activeQuizTest, setActiveQuizTest] = useState<Test | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<{ [qId: string]: string }>({});
   const [quizStudentImages, setQuizStudentImages] = useState<{ [qId: string]: string }>({});
+  const [quizGeneralImages, setQuizGeneralImages] = useState<string[]>([]);
   const [quizTimeRemaining, setQuizTimeRemaining] = useState<number>(0);
   const [activeQuizAttemptResult, setActiveQuizAttemptResult] = useState<QuizAttempt | null>(null);
 
@@ -553,9 +555,29 @@ export default function App() {
       };
     }
 
+    if (testToRun && testToRun.questions) {
+      const typeOrder: Record<string, number> = {
+        'MCQ': 1,
+        'TRUE_FALSE': 2,
+        'SHORT_ANSWER': 3,
+        'FILL_BLANK': 3,
+        'MATCHING': 4,
+        'SHORT_ESSAY': 5
+      };
+      testToRun = {
+        ...testToRun,
+        questions: [...testToRun.questions].map(normalizeQuestion).sort((a, b) => {
+          const valA = typeOrder[a.type as string] || 99;
+          const valB = typeOrder[b.type as string] || 99;
+          return valA - valB;
+        })
+      };
+    }
+
     setActiveQuizTest(testToRun);
     setQuizAnswers({});
     setQuizStudentImages({});
+    setQuizGeneralImages([]);
     setQuizTimeRemaining(testToRun.duration * 60);
     setActiveTab('quiz-player');
     sound.playQuizStart();
@@ -613,7 +635,8 @@ export default function App() {
           earnedPoints += qWeight;
         }
       } else if (q.type === 'SHORT_ESSAY') {
-        if (userAns.length > 8) {
+        const hasImg = !!quizStudentImages[q.id];
+        if (userAns.length > 8 || hasImg) {
           earnedPoints += qWeight * 0.8;
         }
       }
@@ -641,6 +664,7 @@ export default function App() {
       className: currentStudent.className,
       answers: quizAnswers,
       studentImages: quizStudentImages,
+      generalWorksheetImages: quizGeneralImages,
       score: finalScore,
       timeSpent,
       submittedAt: new Date().toLocaleString('vi-VN'),
@@ -680,12 +704,15 @@ export default function App() {
   };
 
   // Convert LaTeX math formulas into standard W3C MathML block for high fidelity Microsoft Word native Equation import
-  const convertToWordMathML = (text: string | undefined): string => {
+  const convertToWordMathML = (text: string | undefined, format: 'mathml' | 'latex' = 'mathml'): string => {
     if (!text) return '';
+    if (format === 'latex') {
+      return text;
+    }
     try {
       // Split by double dollar block formulas or single dollar inline formulas
-      const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
-      return parts.map((part) => {
+      const partsSplit = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
+      return partsSplit.map((part) => {
         if (part.startsWith('$$') && part.endsWith('$$')) {
           const formula = part.slice(2, -2).trim();
           try {
@@ -695,7 +722,17 @@ export default function App() {
               throwOnError: false
             });
             const match = mathmlText.match(/<math[\s\S]*<\/math>/);
-            return match ? match[0] : part;
+            if (match) {
+              let clean = match[0]
+                .replace(/<annotation[^>]*>[\s\S]*?<\/annotation>/g, '')
+                .replace(/<semantics>/g, '')
+                .replace(/<\/semantics>/g, '');
+              if (!clean.includes('xmlns="http://www.w3.org/1998/Math/MathML"')) {
+                clean = clean.replace('<math', '<math xmlns="http://www.w3.org/1998/Math/MathML"');
+              }
+              return clean;
+            }
+            return part;
           } catch (err) {
             return part;
           }
@@ -708,7 +745,17 @@ export default function App() {
               throwOnError: false
             });
             const match = mathmlText.match(/<math[\s\S]*<\/math>/);
-            return match ? match[0] : part;
+            if (match) {
+              let clean = match[0]
+                .replace(/<annotation[^>]*>[\s\S]*?<\/annotation>/g, '')
+                .replace(/<semantics>/g, '')
+                .replace(/<\/semantics>/g, '');
+              if (!clean.includes('xmlns="http://www.w3.org/1998/Math/MathML"')) {
+                clean = clean.replace('<math', '<math xmlns="http://www.w3.org/1998/Math/MathML"');
+              }
+              return clean;
+            }
+            return part;
           } catch (err) {
             return part;
           }
@@ -721,14 +768,19 @@ export default function App() {
   };
 
   // EXPORT WORD FRIENDLY DOCX / HTML FILE
-  const handleExportTestFile = (test: Test, detailedAnswers = false, fileFormat: 'html' | 'doc' = 'doc') => {
+  const handleExportTestFile = (
+    test: Test, 
+    detailedAnswers = false, 
+    fileFormat: 'html' | 'doc' = 'doc', 
+    formulaFormat: 'mathml' | 'latex' = 'mathml'
+  ) => {
     const examCode = test.id ? parseInt(test.id.replace(/[^0-9]/g, '')) % 900 + 101 : 205;
     const schoolNameUpper = (activeSubject.schoolName || 'TRƯỜNG THCS ARCHIMEDES ACADEMY').toUpperCase();
     const testPurposeUpper = (test.purpose || 'ĐỀ KHẢO SÁT CHẤT LƯỢNG').toUpperCase();
     const subjectUpper = activeSubject.name.toUpperCase();
 
     let html = `<!DOCTYPE html>
-      <html>
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/12/omml" xmlns="http://www.w3.org/TR/REC-html40">
       <head>
         <meta charset="utf-8">
         <title>${test.title}</title>
@@ -972,6 +1024,7 @@ export default function App() {
 
     const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
+    let exportGlobalQNum = 0;
     sections.forEach((sec, secIdx) => {
       html += `
         <div class="section-title" style="margin-top: 30px;">PHẦN ${romanNumerals[secIdx]}: ${sec.title}</div>
@@ -979,53 +1032,100 @@ export default function App() {
       `;
 
       sec.questions.forEach((q, idx) => {
-        const renderedContent = convertToWordMathML(q.content);
+        const currentQNum = ++exportGlobalQNum;
+        const renderedContent = convertToWordMathML(q.content, formulaFormat);
         html += `
           <div class="question">
-            <div class="question-content">Câu ${idx + 1}. ${renderedContent} <span style="font-weight: normal; font-size: 11px; color: #666; font-style: italic;">(${q.level})</span></div>
+            <div class="question-content">Câu ${currentQNum}. ${renderedContent} <span style="font-weight: normal; font-size: 11px; color: #666; font-style: italic;">(${q.level})</span></div>
         `;
 
         if (q.type === 'MCQ' && q.options && q.options.length > 0) {
-          html += `<div class="options-grid">`;
-          q.options.forEach(o => {
-            const renderedOption = convertToWordMathML(o);
-            html += `<div>${renderedOption}</div>`;
+          html += `<table style="width: 100%; border-collapse: collapse; margin-left: 20px; font-size: 13.5px; margin-top: 5px; margin-bottom: 12px;">`;
+          // Split into pairs of 2 columns
+          for (let i = 0; i < q.options.length; i += 2) {
+            html += `<tr>`;
+            const opt1 = q.options[i];
+            const opt2 = q.options[i + 1];
+            
+            const renderedOpt1 = convertToWordMathML(opt1, formulaFormat);
+            html += `<td style="width: 50%; padding: 4px 0; vertical-align: top;">${renderedOpt1}</td>`;
+            
+            if (opt2) {
+              const renderedOpt2 = convertToWordMathML(opt2, formulaFormat);
+              html += `<td style="width: 50%; padding: 4px 0; vertical-align: top;">${renderedOpt2}</td>`;
+            } else {
+              html += `<td style="width: 50%;"></td>`;
+            }
+            html += `</tr>`;
+          }
+          html += `</table>`;
+        } 
+        else if (q.type === 'TRUE_FALSE' && q.options && q.options.length > 0) {
+          html += `<table style="width: 100%; border-collapse: collapse; margin-left: 20px; font-size: 13.5px; margin-top: 5px; margin-bottom: 12px;">`;
+          const alphaLabels = ['a', 'b', 'c', 'd'];
+          q.options.forEach((opt, oI) => {
+            const cleanOpt = opt.replace(/^[a-zA-Z0-9]\.\s*|^[a-zA-Z0-9]\)\s*/, '');
+            const renderedOpt = convertToWordMathML(cleanOpt, formulaFormat);
+            html += `
+              <tr>
+                <td style="vertical-align: top; padding: 5px 0; width: 75%;">
+                  <strong>${alphaLabels[oI]})</strong> ${renderedOpt}
+                </td>
+                <td style="vertical-align: top; padding: 5px 0; width: 25%; text-align: right; white-space: nowrap; font-family: Arial, sans-serif; font-size: 12.5px;">
+                  <span style="margin-right: 15px;">[ ] Đúng</span>
+                  <span>[ ] Sai</span>
+                </td>
+              </tr>
+            `;
           });
-          html += `</div>`;
+          html += `</table>`;
         } 
         else if (q.type === 'TRUE_FALSE') {
+          // Fallback if options are empty
           html += `
-            <div class="options-grid" style="grid-template-columns: 1fr 1fr; max-width: 250px; margin-left: 20px;">
-              <div>[ ] Đúng</div>
-              <div>[ ] Sai</div>
-            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-left: 20px; font-size: 13.5px; margin-top: 5px; margin-bottom: 12px;">
+              <tr>
+                <td style="width: 75%;">Khẳng định nhận định chung:</td>
+                <td style="width: 25%; text-align: right; white-space: nowrap; font-family: Arial, sans-serif;">
+                  <span style="margin-right: 15px;">[ ] Đúng</span>
+                  <span>[ ] Sai</span>
+                </td>
+              </tr>
+            </table>
           `;
-        } 
+        }
         else if (q.type === 'MATCHING' && q.options && q.matchingRight) {
-          html += `<div class="matching-grid">`;
+          html += `<table style="width: 100%; border-collapse: collapse; margin-left: 20px; font-size: 13.5px; margin-top: 5px; margin-bottom: 12px;">`;
+          html += `<tr>`;
+          
           // Left Column
-          html += `<div><div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Cột vế trái:</div>`;
+          html += `<td style="width: 50%; padding: 6px; vertical-align: top;">`;
+          html += `<div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 6px;">Cột vế trái:</div>`;
           q.options.forEach((opt, oI) => {
-            const renderedOpt = convertToWordMathML(opt);
-            html += `<div class="matching-item">${oI}) ${renderedOpt}</div>`;
+            const renderedOpt = convertToWordMathML(opt, formulaFormat);
+            html += `<div style="background-color: #f9fafb; border: 1px solid #e5e7eb; padding: 6px 12px; margin-bottom: 4px; border-radius: 6px;">${oI}) ${renderedOpt}</div>`;
           });
-          html += `</div>`;
+          html += `</td>`;
+          
           // Right Column
-          html += `<div><div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase;">Cột vế phải:</div>`;
+          html += `<td style="width: 50%; padding: 6px; vertical-align: top;">`;
+          html += `<div style="font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 6px;">Cột vế phải:</div>`;
           q.matchingRight.forEach((mr, mrI) => {
-            const renderedMr = convertToWordMathML(mr);
-            html += `<div class="matching-item">${mrI}) ${renderedMr}</div>`;
+            const renderedMr = convertToWordMathML(mr, formulaFormat);
+            html += `<div style="background-color: #f9fafb; border: 1px solid #e5e7eb; padding: 6px 12px; margin-bottom: 4px; border-radius: 6px;">${mrI}) ${renderedMr}</div>`;
           });
-          html += `</div>`;
-          html += `</div>`;
+          html += `</td>`;
+          
+          html += `</tr>`;
+          html += `</table>`;
         } 
         else if (q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK' || q.type === 'SHORT_ESSAY') {
           html += `<div class="short-answer" style="margin-left: 20px;">Đáp án viết hoặc kết quả điền: ..........................................................................................</div>`;
         }
 
         if (detailedAnswers) {
-          const renderedCorrectAnswer = convertToWordMathML(q.correctAnswer);
-          const renderedExplanation = convertToWordMathML(q.explanation);
+          const renderedCorrectAnswer = convertToWordMathML(q.correctAnswer, formulaFormat);
+          const renderedExplanation = convertToWordMathML(q.explanation, formulaFormat);
           html += `
             <div class="ans-box" style="margin-top: 10px;">
               <div class="ans-title">✓ ĐÁP ÁN CHUẨN: ${renderedCorrectAnswer}</div>
@@ -1054,11 +1154,13 @@ export default function App() {
           </thead>
           <tbody>
       `;
+      let tableGlobalQNum = 0;
       sections.forEach((sec, secIdx) => {
         sec.questions.forEach((q, idx) => {
+          const currentTableQNum = ++tableGlobalQNum;
           html += `
             <tr>
-              <td><strong>Phần ${romanNumerals[secIdx]} - Câu ${idx + 1}</strong></td>
+              <td><strong>Câu ${currentTableQNum}</strong> (Phần ${romanNumerals[secIdx]})</td>
               <td><code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${q.correctAnswer}</code></td>
               <td style="text-align: left;">${q.learningOutcome || 'Mục tiêu kiểm định năng lực'}</td>
             </tr>
@@ -1088,6 +1190,223 @@ export default function App() {
     link.download = `${test.title.replace(/\s+/g, '_')}${detailedAnswers ? '_DapAn_ChiTiet' : ''}.${fileExtension}`;
     link.click();
     showToast(`Tải ${fileFormat === 'doc' ? 'Đề thi dạng Word (.DOCX tương thích)' : 'Đề thi dạng HTML'} thành công!`, 'success');
+  };
+
+  // EXPORT HIGH FIDELITY LATEX (.TEX) SOURCE FILE FOR MATH TEACHERS
+  const handleExportLaTeXFile = (test: Test, detailedAnswers = false) => {
+    const examCode = test.id ? parseInt(test.id.replace(/[^0-9]/g, '')) % 900 + 101 : 205;
+    const schoolNameUpper = (activeSubject.schoolName || 'TRƯỜNG THCS ARCHIMEDES ACADEMY').toUpperCase();
+    const testPurposeUpper = (test.purpose || 'ĐỀ KHẢO SÁT CHẤT LƯỢNG').toUpperCase();
+    const subjectUpper = activeSubject.name.toUpperCase();
+
+    let tex = `% Đề thi tạo bởi QuickQuiz AI - Xuất LaTeX chất lượng cao
+\\documentclass[12pt,a4paper]{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage[vietnamese]{babel}
+\\usepackage{amsmath,amssymb,amsfonts}
+\\usepackage{geometry}
+\\usepackage{multicol}
+\\usepackage{enumitem}
+
+\\geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
+
+\\begin{document}
+
+% --- PHẦN TIÊU ĐỀ ---
+\\noindent
+\\begin{minipage}[t]{0.45\\textwidth}
+\\centering
+\\textbf{${schoolNameUpper}} \\\\
+\\textbf{MÃ ĐỀ THI: ${examCode}} \\\\
+\\rule{3cm}{0.4pt}
+\\end{minipage}
+\\hfill
+\\begin{minipage}[t]{0.45\\textwidth}
+\\centering
+\\textbf{${testPurposeUpper}} \\\\
+\\textbf{MÔN: ${subjectUpper} - LỚP: ${test.grade}} \\\\
+\\textit{Thời gian làm bài: ${test.duration} phút}
+\\end{minipage}
+
+\\vspace{0.5cm}
+\\noindent
+\\rule{\\textwidth}{1pt}
+
+\\vspace{0.3cm}
+\\noindent
+\\textbf{Họ và tên thí sinh:}................................................................. \\hfill \\textbf{SBD:}...................
+
+\\vspace{0.3cm}
+\\noindent
+\\textit{Trắc nghiệm: Khoanh tròn vào một phương án đúng duy nhất. Tự luận: Trình bày chi tiết lời giải.}
+
+\\vspace{0.5cm}
+`;
+
+    const normalizedQuestions = (test.questions || []).map(normalizeQuestion);
+
+    const mcqQs = normalizedQuestions.filter(q => q.type === 'MCQ');
+    const tfQs = normalizedQuestions.filter(q => q.type === 'TRUE_FALSE');
+    const saQs = normalizedQuestions.filter(q => q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK');
+    const matchingQs = normalizedQuestions.filter(q => q.type === 'MATCHING');
+    const essayQs = normalizedQuestions.filter(q => q.type === 'SHORT_ESSAY');
+
+    // Helper to clean HTML to LaTeX commands
+    const cleanToLatex = (text: string | undefined): string => {
+      if (!text) return '';
+      return text
+         .replace(/<br\s*\/?>/gi, ' \\\\ ')
+         .replace(/<strong>([\s\S]*?)<\/strong>/gi, '\\textbf{$1}')
+         .replace(/<b>([\s\S]*?)<\/b>/gi, '\\textbf{$1}')
+         .replace(/<em>([\s\S]*?)<\/em>/gi, '\\textit{$1}')
+         .replace(/<i>([\s\S]*?)<\/i>/gi, '\\textit{$1}')
+         .replace(/&nbsp;/g, ' ')
+         .replace(/&lt;/g, '<')
+         .replace(/&gt;/g, '>')
+         .replace(/&amp;/g, '&');
+    };
+
+    let sectionCounter = 0;
+    const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+    let latexGlobalQNum = 1;
+
+    // MCQ Section
+    if (mcqQs.length > 0) {
+      tex += `\\section*{PHẦN ${romanNumerals[sectionCounter++]}. TRẮC NGHIỆM NHIỀU LỰA CHỌN}\n`;
+      tex += `\\textit{Thí sinh khoanh tròn vào một phương án trả lời đúng duy nhất.}\n\\begin{enumerate}[label=\\bf Câu \\arabic*., start=${latexGlobalQNum}]\n`;
+      latexGlobalQNum += mcqQs.length;
+      mcqQs.forEach(q => {
+        tex += `  \\item ${cleanToLatex(q.content)}\n`;
+        if (q.options && q.options.length > 0) {
+          tex += `  \\begin{multicols}{2}\n`;
+          tex += `    \\begin{enumerate}[label=\\bf \\Alph*.]\n`;
+          q.options.forEach(opt => {
+            const cleanOpt = opt.replace(/^[A-H](?:\.|\)|\/)\s*/, '');
+            tex += `      \\item ${cleanToLatex(cleanOpt)}\n`;
+          });
+          tex += `    \\end{enumerate}\n`;
+          tex += `  \\end{multicols}\n`;
+        }
+        if (detailedAnswers) {
+          tex += `  \\textbf{Đáp án đúng:} ${cleanToLatex(q.correctAnswer)} \\\\\n`;
+          tex += `  \\textbf{Lời giải chi tiết:} ${cleanToLatex(q.explanation)}\n`;
+        }
+      });
+      tex += `\\end{enumerate}\n\\vspace{0.5cm}\n`;
+    }
+
+    // True/False Section
+    if (tfQs.length > 0) {
+       tex += `\\section*{PHẦN ${romanNumerals[sectionCounter++]}. TRẮC NGHIỆM ĐÚNG/SAI}\n`;
+       tex += `\\textit{Thí sinh trả lời Đúng hoặc Sai cho mỗi nhận định a), b), c), d).}\n\\begin{enumerate}[label=\\bf Câu \\arabic*., start=${latexGlobalQNum}]\n`;
+       latexGlobalQNum += tfQs.length;
+       tfQs.forEach(q => {
+         tex += `  \\item ${cleanToLatex(q.content)}\n`;
+         if (q.options && q.options.length > 0) {
+           tex += `  \\begin{enumerate}[label=\\alph*)]\n`;
+           q.options.forEach(opt => {
+             const cleanOpt = opt.replace(/^[a-h](?:\.|\)|\/)\s*/i, '');
+             tex += `    \\item ${cleanToLatex(cleanOpt)} \\hfill [Đúng / Sai]\n`;
+           });
+           tex += `  \\end{enumerate}\n`;
+         }
+         if (detailedAnswers) {
+           tex += `  \\textbf{Đáp án đúng (a,b,c,d):} ${cleanToLatex(q.correctAnswer)} \\\\\n`;
+           tex += `  \\textbf{Lời giải chi tiết:} ${cleanToLatex(q.explanation)}\n`;
+         }
+       });
+       tex += `\\end{enumerate}\n\\vspace{0.5cm}\n`;
+    }
+
+    // Short Answer Section
+    if (saQs.length > 0) {
+       tex += `\\section*{PHẦN ${romanNumerals[sectionCounter++]}. TRẮC NGHIỆM TRẢ LỜI NGẮN}\n`;
+       tex += `\\textit{Thí sinh viết câu trả lời ngắn vào khoảng trống tương ứng.}\n\\begin{enumerate}[label=\\bf Câu \\arabic*., start=${latexGlobalQNum}]\n`;
+       latexGlobalQNum += saQs.length;
+       saQs.forEach(q => {
+         tex += `  \\item ${cleanToLatex(q.content)}\n`;
+         tex += `  \\\\ \\textbf{Đáp số:} ..................................................\n`;
+         if (detailedAnswers) {
+           tex += `  \\\\ \\textbf{Đáp án đúng:} ${cleanToLatex(q.correctAnswer)} \\\\\n`;
+           tex += `  \\textbf{Lời giải chi tiết:} ${cleanToLatex(q.explanation)}\n`;
+         }
+       });
+       tex += `\\end{enumerate}\n\\vspace{0.5cm}\n`;
+    }
+
+    // Matching Section
+    if (matchingQs.length > 0) {
+       tex += `\\section*{PHẦN ${romanNumerals[sectionCounter++]}. GHÉP CẶP CÂU HỎI}\n`;
+       tex += `\\begin{enumerate}[label=\\bf Câu \\arabic*., start=${latexGlobalQNum}]\n`;
+       latexGlobalQNum += matchingQs.length;
+       matchingQs.forEach(q => {
+         tex += `  \\item ${cleanToLatex(q.content)}\n`;
+         tex += `  \\begin{multicols}{2}\n`;
+         if (q.options && q.options.length > 0) {
+           tex += `    \\textbf{Vế trái:}\n    \\begin{enumerate}[label=\\arabic*)]\n`;
+           q.options.forEach(opt => {
+             tex += `      \\item ${cleanToLatex(opt)}\n`;
+           });
+           tex += `    \\end{enumerate}\n`;
+         }
+         if (q.matchingRight && q.matchingRight.length > 0) {
+           tex += `    \\columnbreak\n`;
+           tex += `    \\textbf{Vế phải:}\n    \\begin{enumerate}[label=\\Alph*)]\n`;
+           q.matchingRight.forEach(mr => {
+             tex += `      \\item ${cleanToLatex(mr)}\n`;
+           });
+           tex += `    \\end{enumerate}\n`;
+         }
+         tex += `  \\end{multicols}\n`;
+         tex += `  \\\\ \\textbf{Nối đáp án (ví dụ 1-A, 2-B...):} ................................\n`;
+         if (detailedAnswers) {
+           tex += `  \\\\ \\textbf{Đáp án đúng:} ${cleanToLatex(q.correctAnswer)} \\\\\n`;
+           tex += `  \\textbf{Lời giải chi tiết:} ${cleanToLatex(q.explanation)}\n`;
+         }
+       });
+       tex += `\\end{enumerate}\n\\vspace{0.5cm}\n`;
+    }
+
+    // Essay Section
+    if (essayQs.length > 0) {
+       tex += `\\section*{PHẦN ${romanNumerals[sectionCounter++]}. CÂU HỎI TỰ LUẬN (ESSAY)}\n`;
+       tex += `\\textit{Thí sinh trình bày lời giải chi tiết và cách lập luận.}\n\\begin{enumerate}[label=\\bf Câu \\arabic*., start=${latexGlobalQNum}]\n`;
+       latexGlobalQNum += essayQs.length;
+       essayQs.forEach(q => {
+         tex += `  \\item ${cleanToLatex(q.content)}\n`;
+         tex += `  \\\\ \\textit{Bài làm:} \\\\ \\vspace{4cm}\n`;
+         if (detailedAnswers) {
+           tex += `  \\textbf{Đáp án sơ lược:} ${cleanToLatex(q.correctAnswer)} \\\\\n`;
+           tex += `  \\textbf{Lời giải chi tiết:} ${cleanToLatex(q.explanation)}\n`;
+         }
+       });
+       tex += `\\end{enumerate}\n\\vspace{0.5cm}\n`;
+    }
+
+    if (detailedAnswers) {
+      tex += `\n\\section*{BẢNG ĐÁP ÁN ĐỀ THI}\n`;
+      tex += `\\begin{tabular}{|c|c|} \\hline \n`;
+      tex += `  \\textbf{Câu hỏi} & \\textbf{Đáp án chuẩn} \\\\ \\hline \n`;
+      normalizedQuestions.forEach((q, qI) => {
+        const qNum = qI + 1;
+        tex += `  Câu ${qNum} & ${cleanToLatex(q.correctAnswer)} \\\\ \\hline \n`;
+      });
+      tex += `\\end{tabular}\n`;
+    }
+
+    tex += `\n\\end{document}\n`;
+
+    const blob = new Blob([tex], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const filename = `${test.title.replace(/\s+/g, '_')}_${detailedAnswers ? 'DapAn' : 'DeThi'}.tex`;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast(`Tải đề thi nguồn LaTeX (.tex) thành công!`, 'success');
   };
 
   // EXPORT CLASS REPORT EXCEL-FRIENDLY CSV
@@ -2107,12 +2426,15 @@ export default function App() {
               <>
                 <button
                   onClick={() => setActiveTab('class-setup')}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
-                    activeTab === 'class-setup' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-extrabold transition-all relative group ${
+                    activeTab === 'class-setup' ? 'bg-gradient-to-tr from-emerald-600 to-teal-700 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'
                   }`}
                   id="tab-btn-class-setup"
                 >
-                  Cấu hình lớp học
+                  <div className="flex justify-between items-center w-full">
+                    <span>Chấm tự luận AI & Lớp học ✍️</span>
+                    <span className="text-[8px] bg-amber-400 text-slate-900 px-1 py-0.5 rounded-md font-black uppercase animate-pulse">Hot</span>
+                  </div>
                 </button>
                 <button
                   onClick={() => setActiveTab('subject-setup')}
@@ -2255,6 +2577,24 @@ export default function App() {
                   </button>
                 )}
               </div>
+
+              {/* STATS AND SUBMISSIONS DASHBOARD */}
+              <SubmissionStats 
+                subjects={subjects}
+                activeSubject={activeSubject}
+                students={students}
+                tests={tests}
+                assignments={assignments}
+                attempts={attempts}
+                classes={classes}
+                role={role}
+                currentStudent={currentStudent}
+                onToast={showToast}
+                onViewAttempt={(att) => {
+                  setActiveQuizAttemptResult(att);
+                  setActiveTab('quiz-result');
+                }}
+              />
 
               {/* ROLE: STUDENT DASHBOARD VIEW */}
               {role === 'student' && (
@@ -2624,7 +2964,7 @@ export default function App() {
                         className="text-emerald-700 font-extrabold hover:underline text-xs flex items-center gap-1"
                         id="dashboard-btn-edit-classes"
                       >
-                        <Plus className="w-3 h-3" /> Cấu hình lớp học
+                        <Plus className="w-3 h-3" /> Chấm tự luận AI & Sĩ số Lớp học
                       </button>
                     </div>
 
@@ -3013,28 +3353,78 @@ export default function App() {
 
                         {/* Export actions container */}
                         <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex flex-col gap-3 mt-1.5 text-xs">
-                          {/* DOCX Column headings */}
+                          {/* DOCX Native Equation Column headings */}
                           <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                            <span>Mẫu Microsoft Word (.DOCX)</span>
-                            <span className="text-blue-600 uppercase">Mở bằng Word</span>
+                            <span>Mẫu Word Equation (.doc)</span>
+                            <span className="text-blue-600 uppercase text-[9px] font-bold">CÔNG THỨC WORD NATIVE</span>
                           </div>
                           
                           <div className="grid grid-cols-2 gap-2">
                             <button
-                              onClick={() => handleExportTestFile(test, false, 'doc')}
-                              className="px-2.5 py-2 bg-white hover:bg-slate-100 border border-slate-205 text-slate-700 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs hover:border-indigo-200"
-                              title="Tải đề thi trống tương thích Microsoft Word DOCX"
+                              onClick={() => handleExportTestFile(test, false, 'doc', 'mathml')}
+                              className="px-2.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-750 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs hover:border-blue-200"
+                              title="Tải đề thi trống với công thức Equation Word"
                             >
                               <FileText className="w-3.5 h-3.5 text-blue-600" />
-                              <span>Tải Đề (.doc)</span>
+                              <span>Đề Equation (.doc)</span>
                             </button>
                             <button
-                              onClick={() => handleExportTestFile(test, true, 'doc')}
-                              className="px-2.5 py-2 bg-white hover:bg-slate-100 border border-slate-205 text-slate-700 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs hover:border-indigo-200"
-                              title="Tải đáp án chi tiết tương thích Microsoft Word DOCX"
+                              onClick={() => handleExportTestFile(test, true, 'doc', 'mathml')}
+                              className="px-2.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-750 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs hover:border-blue-200"
+                              title="Tải đáp án chi tiết với công thức Equation Word"
                             >
                               <FileText className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>Tải Đ.Án (.doc)</span>
+                              <span>Đ.Án Eq (.doc)</span>
+                            </button>
+                          </div>
+
+                          {/* DOCX Pure LaTeX Column headings */}
+                          <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 pt-1 border-t border-slate-200/40">
+                            <span>Mẫu Word dạng Mã LaTeX (.doc)</span>
+                            <span className="text-pink-600 uppercase text-[9px] font-bold">DỄ COPY & MATHTYPE</span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => handleExportTestFile(test, false, 'doc', 'latex')}
+                              className="px-2.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-750 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs hover:border-pink-200"
+                              title="Tải đề thi dạng Word giữ nguyên mã LaTeX $...$"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-pink-600" />
+                              <span>Đề mã LaTeX (.doc)</span>
+                            </button>
+                            <button
+                              onClick={() => handleExportTestFile(test, true, 'doc', 'latex')}
+                              className="px-2.5 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-750 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs hover:border-pink-200"
+                              title="Tải đáp án dạng Word giữ nguyên mã LaTeX $...$"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-pink-700" />
+                              <span>Đ.Án LaTeX (.doc)</span>
+                            </button>
+                          </div>
+
+                          {/* Source LaTeX compilable headings */}
+                          <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 pt-1 border-t border-slate-200/40">
+                            <span>Biên soạn LaTeX nguồn (.TEX)</span>
+                            <span className="text-violet-600 uppercase text-[9px] font-bold">BIÊN SOẠN CHUYÊN NGHIỆP</span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => handleExportLaTeXFile(test, false)}
+                              className="px-2.5 py-2 bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-800 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                              title="Tải file nguồn LaTeX (.tex) để biên tập trên TeXstudio hoặc Overleaf"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-violet-600" />
+                              <span>Đề nguồn LaTeX (.tex)</span>
+                            </button>
+                            <button
+                              onClick={() => handleExportLaTeXFile(test, true)}
+                              className="px-2.5 py-2 bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-800 rounded-xl font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                              title="Tải file đáp án nguồn LaTeX (.tex) biên tập trên TeXstudio hoặc Overleaf"
+                            >
+                              <FileText className="w-3.5 h-3.5 text-violet-700" />
+                              <span>Đ.Án LaTeX (.tex)</span>
                             </button>
                           </div>
 
@@ -3800,6 +4190,74 @@ export default function App() {
                   >
                     NỘP BÀI THI
                   </button>
+                </div>
+              </div>
+
+              {/* TẢI ẢNH BÀI LÀM CỦA HỌC SINH (Toàn bộ tờ giấy thi / viết nháp) */}
+              <div className="bg-emerald-50/40 border border-dashed border-emerald-200/80 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-5 text-left">
+                <div className="space-y-1 w-full md:max-w-xl">
+                  <div className="flex items-center gap-1.5 text-slate-800">
+                    <span className="text-base">📸</span>
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-850">
+                      Nộp ảnh chụp bài làm giấy / Tờ bài thi chép tay của em
+                    </span>
+                    <span className="text-[10px] bg-emerald-100/90 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Thêm ảnh</span>
+                  </div>
+                  <p className="text-[10.5px] text-slate-500 leading-relaxed font-sans">
+                    Nếu em viết lời giải, vẽ hình đồ thị học hay giải toán học trên cuốn vở/mẫu giấy kiểm tra riêng, hãy bấm tải ảnh đính kèm bài làm tại đây. Hệ thống sẽ tích hợp giúp thầy cô & AI chấm điểm rèn luyện tối ưu nhất.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  {quizGeneralImages.map((imgData, idx) => (
+                    <div key={idx} className="relative w-14 h-14 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group shadow-3xs animate-fadeIn">
+                      <img src={imgData} alt={`Worksheet snapshot`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuizGeneralImages(prev => prev.filter((_, i) => i !== idx));
+                          showToast('Đã xóa bỏ bức ảnh bài làm!', 'info');
+                        }}
+                        className="absolute inset-0 bg-red-650/85 text-white opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center font-bold text-[9px] cursor-pointer"
+                      >
+                        Xóa bớt
+                      </button>
+                    </div>
+                  ))}
+
+                  {quizGeneralImages.length < 4 && (
+                    <div className="relative">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple
+                        id="quiz-general-uploader"
+                        className="hidden" 
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          files.forEach(file => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setQuizGeneralImages(prev => {
+                                if (prev.includes(reader.result as string)) return prev;
+                                return [...prev, reader.result as string];
+                              });
+                            };
+                            reader.readAsDataURL(file as Blob);
+                          });
+                          showToast(`Tải ảnh minh chứng bài làm giấy thành công!`, 'success');
+                        }}
+                      />
+                      <label 
+                        htmlFor="quiz-general-uploader"
+                        className="w-14 h-14 rounded-xl border border-dashed border-slate-300 bg-white hover:bg-slate-50 hover:border-emerald-500 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all shrink-0 text-slate-400 select-none shadow-3xs"
+                        title="Tải thêm ảnh chép tay"
+                      >
+                        <span className="text-xl font-bold font-sans">+</span>
+                        <span className="text-[7.5px] font-black text-slate-400">Tải ảnh</span>
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -19,7 +19,17 @@ const convertToWordMathML = (text: string | undefined): string => {
             throwOnError: false
           });
           const match = mathmlText.match(/<math[\s\S]*<\/math>/);
-          return match ? match[0] : part;
+          if (match) {
+            let clean = match[0]
+              .replace(/<annotation[^>]*>[\s\S]*?<\/annotation>/g, '')
+              .replace(/<semantics>/g, '')
+              .replace(/<\/semantics>/g, '');
+            if (!clean.includes('xmlns="http://www.w3.org/1998/Math/MathML"')) {
+              clean = clean.replace('<math', '<math xmlns="http://www.w3.org/1998/Math/MathML"');
+            }
+            return clean;
+          }
+          return part;
         } catch (err) {
           return part;
         }
@@ -32,7 +42,17 @@ const convertToWordMathML = (text: string | undefined): string => {
             throwOnError: false
           });
           const match = mathmlText.match(/<math[\s\S]*<\/math>/);
-          return match ? match[0] : part;
+          if (match) {
+            let clean = match[0]
+              .replace(/<annotation[^>]*>[\s\S]*?<\/annotation>/g, '')
+              .replace(/<semantics>/g, '')
+              .replace(/<\/semantics>/g, '');
+            if (!clean.includes('xmlns="http://www.w3.org/1998/Math/MathML"')) {
+              clean = clean.replace('<math', '<math xmlns="http://www.w3.org/1998/Math/MathML"');
+            }
+            return clean;
+          }
+          return part;
         } catch (err) {
           return part;
         }
@@ -116,8 +136,10 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
     const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI'];
     
     // Generate each sections HTML string
+    let downloadGlobalQNum = 0;
     const sectionsHtml = sections.map((sec, secIdx) => {
       const questionsListHtml = sec.questions.map((q, idx) => {
+        const currentQNum = ++downloadGlobalQNum;
         let questionBody = '';
 
         if (q.type === 'MCQ' && q.options && q.options.length > 0) {
@@ -126,17 +148,28 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
               ${q.options.map(opt => `<div class="flex items-start"><span>${convertToWordMathML(opt)}</span></div>`).join('')}
             </div>
           `;
-        } else if (q.type === 'TRUE_FALSE') {
+        } else if (q.type === 'TRUE_FALSE' && q.options && q.options.length > 0) {
+          const alphaLabels = ['a', 'b', 'c', 'd'];
           questionBody = `
-            <div class="flex gap-4 mt-2 pl-4 text-xs font-sans text-slate-650">
-              <div class="flex items-center gap-1">
-                <span style="width:12px; height:12px; border-radius:50%; border:1px solid #999; display:inline-block;"></span>
-                <span>Đúng</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <span style="width:12px; height:12px; border-radius:50%; border:1px solid #999; display:inline-block;"></span>
-                <span>Sai</span>
-              </div>
+            <div class="mt-2 pl-4 text-xs font-sans text-slate-700 space-y-1.5" style="max-width: 650px;">
+              ${q.options.map((opt, oI) => {
+                const cleanOpt = opt.replace(/^[a-zA-Z0-9]\.\s*|^[a-zA-Z0-9]\)\s*/, '');
+                return `
+                  <div class="flex items-start justify-between gap-4 p-1.5 bg-slate-50 border border-slate-100/60 rounded-lg">
+                    <div class="flex-1">
+                      <strong class="text-indigo-950 font-bold mr-1">${alphaLabels[oI]})</strong> ${convertToWordMathML(cleanOpt)}
+                    </div>
+                    <div class="flex items-center gap-3 text-[10px] text-slate-500 shrink-0 font-bold whitespace-nowrap pl-4">
+                      <span class="flex items-center gap-1">
+                        <span style="width:10px; height:10px; border-radius:50%; border:1px solid #777; display:inline-block;"></span> Đúng
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <span style="width:10px; height:10px; border-radius:50%; border:1px solid #777; display:inline-block;"></span> Sai
+                      </span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
             </div>
           `;
         } else if (q.type === 'MATCHING' && q.options && q.matchingRight) {
@@ -181,7 +214,7 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
         return `
           <div class="flex flex-col gap-1 py-1.5 break-inside-avoid">
             <div class="font-extrabold text-slate-800 leading-normal">
-              <span>Câu ${idx + 1}. </span>
+              <span>Câu ${currentQNum}. </span>
               <span>${convertToWordMathML(q.content)}</span>
               <span class="ml-1.5 font-normal text-[9px] font-sans text-emerald-650 bg-emerald-50 px-1.5 py-0.2 rounded-full no-print">${q.level}</span>
               <span class="ml-1 font-extrabold text-[9px] font-sans text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded-full">(${q.points !== undefined ? q.points : 1.0}đ)</span>
@@ -210,7 +243,7 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
     const subjectNameStr = activeSubject.name.toUpperCase();
     
     const htmlContent = `<!DOCTYPE html>
-<html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns:m="http://schemas.microsoft.com/office/2004/12/omml" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
   <meta charset="utf-8">
   <title>${test.title || 'Mẫu Đề Thi Chuẩn Quốc Gia'}</title>
@@ -588,6 +621,7 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
               ].filter(sec => sec.questions.length > 0);
 
               const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI'];
+              let globalQNum = 0;
 
               return sections.map((sec, secIdx) => (
                 <div key={sec.id} className="space-y-4 md:space-y-5">
@@ -603,12 +637,13 @@ export const TestPreviewModal: React.FC<TestPreviewModalProps> = ({
 
                   <div className="space-y-6 pl-2.5">
                     {sec.questions.map((q, idx) => {
+                      const currentQNum = ++globalQNum;
                       return (
                         <div key={q.id} className="group relative flex flex-col gap-2 p-1 rounded-2xl transition-all break-inside-avoid page-break-inside-avoid">
                           
                           {/* Question Content */}
                           <div className="font-extrabold text-slate-800 leading-normal">
-                            <span>Câu {idx + 1}. </span>
+                            <span>Câu {currentQNum}. </span>
                             <MathRenderer text={q.content} />
                             <span className="ml-1.5 font-normal text-[10px] font-sans text-emerald-650 bg-emerald-50 px-1.5 py-0.2 rounded-full tracking-wide inline-block print:hidden">
                               {q.level}

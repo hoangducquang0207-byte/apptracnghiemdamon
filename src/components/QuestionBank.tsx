@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { SubjectConfig, Question, Test, QuestionType, CognitiveLevel, Chapter, Lesson } from '../types';
+import { SubjectConfig, Question, Test, QuestionType, CognitiveLevel, Chapter, Lesson, normalizeQuestion } from '../types';
 import { MathRenderer } from './MathRenderer';
 import { formatScore } from '../utils/numberFormat';
 import { 
@@ -697,7 +697,10 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
             })()}
 
             <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[9px]">
-              {q.type}
+              {q.type === 'MCQ' ? 'Trắc nghiệm (MCQ)' :
+               q.type === 'TRUE_FALSE' ? 'Đúng/Sai (TF)' :
+               q.type === 'SHORT_ANSWER' ? 'Trả lời ngắn (SHORT)' :
+               q.type === 'SHORT_ESSAY' ? 'Tự luận (ESSAY)' : q.type}
             </span>
 
             <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[9px] truncate max-w-[100px]" title={`Chương: ${parentChapter?.name || 'Mã ' + q.chapterId}`}>
@@ -828,6 +831,8 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
 
   // Download presets of CSV structure
   const downloadCSVSample = () => {
+    const safeSubjectName = activeSubject.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
+    const filenameSuffix = `${safeSubjectName}${activeSubject.grade}`;
     const csvContent = "\uFEFF" + 
       "Nội_dung,Dạng_câu_hỏi,Mức_nhận_thức,Mã_Chương,Mã_Bài,Phương_án_A,Phương_án_B,Phương_án_C,Phương_án_D,Đáp_án_đúng,Giải_thích_chi_tiết\n" +
       "Tính giá trị của biểu thức vạn năng: $A = 2x^2 + 5x - 3$ tại $x = 2$,MCQ,Thông hiểu,CH01,LES01,Giá trị là 15,Giá trị là -1,Giá trị là 11,Giá trị là 5,A,Đây là phương pháp thay số trực tiếp $x = 2$ vào biểu thức $A$.\n" +
@@ -838,7 +843,7 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Bieu_mau_cau_hoi_${activeSubject.id}.csv`);
+    link.setAttribute("download", `Bieu_mau_cau_hoi_${filenameSuffix}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -847,116 +852,193 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
 
   // Download presets of TXT structure (Specimen-style format matching user image)
   const downloadTXTSample = () => {
+    const safeSubjectName = activeSubject.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
+    const filenameSuffix = `${safeSubjectName}${activeSubject.grade}`;
     const txtContent = 
-      "Chương: chuong-3\n" +
-      "Bài: Tứ giác\n" +
+      "========================================================================\n" +
+      "HƯỚNG DẪN ĐỊNH DẠNG FILE .TXT NHẬP ĐỀ THI VÀO QUICKQUIZ AI\n" +
+      "========================================================================\n" +
+      "- File văn bản thô được lưu dưới định dạng UTF-8.\n" +
+      "- Mỗi câu hỏi được phân tách bằng một dòng trống.\n" +
+      "- Các khóa trường thông tin bao gồm: Chương, Bài, Mức độ, Dạng, Câu, Đáp án, Lời giải.\n" +
+      "- Hệ thống hỗ trợ 4 dạng câu hỏi chuẩn:\n" +
+      "  1. MCQ: Trắc nghiệm khách quan nhiều lựa chọn (Lựa chọn A, B, C, D).\n" +
+      "  2. TF: Trắc nghiệm Đúng/Sai (Nhận định a, b, c, d phân cách bằng dấu phẩy ở Đáp án).\n" +
+      "  3. SHORT: Trắc nghiệm Trả lời ngắn / Điền đáp số.\n" +
+      "  4. ESSAY: Câu hỏi Tự luận (Học sinh trình bày lời giải hệ thống).\n" +
+      "- Công thức Toán/Lý/Hóa sử dụng cú pháp LaTeX chuẩn đặt trong dấu $ (inline) hoặc $$ (block).\n" +
+      "========================================================================\n\n" +
+      "Chương: chuong-1\n" +
+      "Bài: Mệnh đề và tập hợp\n" +
       "Mức độ: Nhận biết\n" +
       "Dạng: MCQ\n" +
-      "Câu: Trong tứ giác $ABCD$, các cạnh của tứ giác là:\n" +
-      "A. $AB, BC, CD, DA$\n" +
-      "B. $AB, AC, CD, BD$\n" +
-      "C. $AC, BD, AB, CD$\n" +
-      "D. $AD, BD, BC, AC$\n" +
-      "Đáp án: A\n" +
-      "Lời giải: Các cạnh của tứ giác $ABCD$ là các đoạn nối hai đỉnh liên tiếp: $AB, BC, CD, DA$.\n\n" +
-      "Chương: chuong-3\n" +
-      "Bài: Tứ giác\n" +
+      "Câu: Cho tập hợp $A = \\{1; 2; 3; 4\\}$. Số phần tử của tập hợp $A$ là:\n" +
+      "A. $2$\n" +
+      "B. $3$\n" +
+      "C. $4$\n" +
+      "D. $5$\n" +
+      "Đáp án: C\n" +
+      "Lời giải: Tập hợp $A$ gồm bốn phần tử là $1, 2, 3, 4$, do đó số phần tử là $4$.\n\n" +
+      "Chương: chuong-1\n" +
+      "Bài: Mệnh đề và tập hợp\n" +
+      "Mức độ: Thông hiểu\n" +
+      "Dạng: TF\n" +
+      "Câu: Khẳng định sau đây về tập hợp số là Đúng hay Sai:\n" +
+      "a) Tập hợp số tự nhiên $\\mathbb{N}$ là tập con của tập số nguyên $\\mathbb{Z}$.\n" +
+      "b) Số $\\sqrt{2}$ là một số hữu tỉ thuộc tập $\\mathbb{Q}$.\n" +
+      "c) Tập hợp số thực $\\mathbb{R}$ được biểu diễn bằng trục số liên tục.\n" +
+      "d) Giao của tập hợp số nguyên $\\mathbb{Z}$ và tập hợp số hữu tỉ $\\mathbb{Q}$ là tập rỗng.\n" +
+      "Đáp án: Đúng,Sai,Đúng,Sai\n" +
+      "Lời giải: a) Đúng vì $\\mathbb{N} \\subset \\mathbb{Z}$. b) Sai vì $\\sqrt{2}$ là số vô tỉ. c) Đúng. d) Sai vì $\\mathbb{Z} \\cap \\mathbb{Q} = \\mathbb{Z}$.\n\n" +
+      "Chương: chuong-1\n" +
+      "Bài: Phương trình và hệ phương trình\n" +
       "Mức độ: Vận dụng\n" +
       "Dạng: SHORT\n" +
-      "Câu: Cho tứ giác $ABCD$ có $\\widehat A=85^\\circ, \\widehat B=75^\\circ, \\widehat C=110^\\circ$. Tính $\\widehat D$.\n" +
-      "Đáp án: $90^\\circ$\n" +
-      "Lời giải: $\\widehat D=360^\\circ-(85^\\circ+75^\\circ+110^\\circ)=90^\\circ$.\n\n" +
-      "Chương: chuong-3\n" +
-      "Chủ đề: Tứ giác\n" +
-      "Mức độ: Nhận biết\n" +
-      "Dạng: TF\n" +
-      "Câu: Khẳng định sau đây về tứ giác $PQRS$ là Đúng hay Sai:\n" +
-      "1/ Tứ giác $PQRS$ có các đỉnh là $P, Q, R, S$.\n" +
-      "2/ Các cạnh của tứ giác $PQRS$ là $PQ, QR, RS, SP$.\n" +
-      "3/ Hai đường chéo của tứ giác $PQRS$ là $PR$ và $QS$.\n" +
-      "4/ $PQ$ và $RS$ là hai đường chéo.\n" +
-      "Đáp án: Đúng,Đúng,Đúng,Sai\n" +
-      "Lời giải: $PQ$ và $RS$ là hai cạnh đối diện, không phải hai đường chéo; hai đường chéo là $PR$ và $QS$.\n";
+      "Câu: Tìm giá trị thực của tham số $m$ để phương trình bậc hai $x^2 - 2x + m = 0$ có nghiệm kép.\n" +
+      "Đáp án: $1$\n" +
+      "Lời giải: Phương trình có nghiệm kép khi và chỉ khi $\\Delta' = (-1)^2 - m = 0 \\Leftrightarrow m = 1$.\n\n" +
+      "Chương: chuong-2\n" +
+      "Bài: Thống kê và xác suất\n" +
+      "Mức độ: Vận dụng cao\n" +
+      "Dạng: ESSAY\n" +
+      "Câu: Một hộp chứa $5$ quả cầu đỏ và $7$ quả cầu xanh có kích thước giống nhau. Lấy ngẫu nhiên đồng thời $3$ quả cầu từ hộp. Tính xác suất để lấy được ít nhất $2$ quả cầu màu đỏ.\n" +
+      "Đáp án: $\\frac{4}{11}$\n" +
+      "Lời giải: Tổng số cách chọn 3 quả cầu bất kì là $C_{12}^3 = 220$. Biến cố $A$: \"lấy được ít nhất 2 quả cầu đỏ\" gồm hai trường hợp: Trường hợp 1: Chọn đúng 2 quả đỏ và 1 quả xanh, có $C_5^2 \\times C_7^1 = 70$. Trường hợp 2: Lấy 3 quả đỏ có $C_5^3 = 10$. Xác suất là $P(A) = \\frac{80}{220} = \\frac{4}{11}$.\n";
 
-    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Bieu_mau_cau_hoi_${activeSubject.id}.txt`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const blobTxt = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+    const urlTxt = URL.createObjectURL(blobTxt);
+    const linkTxt = document.createElement("a");
+    linkTxt.setAttribute("href", urlTxt);
+    linkTxt.setAttribute("download", `Bieu_mau_cau_hoi_${filenameSuffix}.txt`);
+    document.body.appendChild(linkTxt);
+    linkTxt.click();
+    document.body.removeChild(linkTxt);
     onToast('Đã tải tệp văn bản TXT mẫu thành công!', 'success');
   };
-
-  // Export Filtered Questions to CSV
   const handleExportCSV = () => {
     if (filteredQuestions.length === 0) {
       onToast('Không có câu hỏi nào để xuất tệp CSV!', 'error');
       return;
     }
 
-    let csvContent = "\uFEFF" + "Mã_Số,Nội_dung,Dạng_câu_hỏi,Mức_nhận_thức,Mã_Chương,Mã_Bài,Phương_án_A,Phương_án_B,Phương_án_C,Phương_án_D,Đáp_án_đúng,Giải_thích_chi_tiết,Thẻ_Tags\n";
-    
-    filteredQuestions.forEach(q => {
-      const aOpt = q.options?.[0]?.replace(/^[A-H]\.\s*/, '') || '';
-      const bOpt = q.options?.[1]?.replace(/^[A-H]\.\s*/, '') || '';
-      const cOpt = q.options?.[2]?.replace(/^[A-H]\.\s*/, '') || '';
-      const dOpt = q.options?.[3]?.replace(/^[A-H]\.\s*/, '') || '';
+    const headers = [
+      "Mã_Số",
+      "Nội_dung",
+      "Dạng_câu_hỏi",
+      "Mức_nhận_thức",
+      "Mã_Chương",
+      "Mã_Bài",
+      "Phương_án_A",
+      "Phương_án_B",
+      "Phương_án_C",
+      "Phương_án_D",
+      "Đáp_án_đúng",
+      "Giải_thích_chi_tiết"
+    ];
 
-      const escape = (val: string) => {
-        const str = val ? val.replace(/"/g, '""') : '';
-        return `"${str}"`;
-      };
+    const escapeVal = (val: string | null | undefined) => {
+      if (!val) return '';
+      const stringified = String(val).replace(/"/g, '""');
+      return `"${stringified}"`;
+    };
 
-      csvContent += `${q.id},${escape(q.content)},${q.type},${q.level},${q.chapterId},${q.lessonId},${escape(aOpt)},${escape(bOpt)},${escape(cOpt)},${escape(dOpt)},${escape(q.correctAnswer)},${escape(q.explanation)},${escape(q.tags.join(';'))}\n`;
+    const rows = filteredQuestions.map(q => {
+      const optA = q.options && q.options[0] ? q.options[0] : '';
+      const optB = q.options && q.options[1] ? q.options[1] : '';
+      const optC = q.options && q.options[2] ? q.options[2] : '';
+      const optD = q.options && q.options[3] ? q.options[3] : '';
+
+      return [
+        escapeVal(q.id),
+        escapeVal(q.content),
+        escapeVal(q.type),
+        escapeVal(q.level),
+        escapeVal(q.chapterId),
+        escapeVal(q.lessonId),
+        escapeVal(optA),
+        escapeVal(optB),
+        escapeVal(optC),
+        escapeVal(optD),
+        escapeVal(q.correctAnswer),
+        escapeVal(q.explanation)
+      ].join(',');
     });
+
+    const csvContent = "\uFEFF" + [headers.join(','), ...rows].join('\n');
+    const safeSubjectName = activeSubject.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
+    const filenameSuffix = `${safeSubjectName}${activeSubject.grade}`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Kho_cau_hoi_${activeSubject.id}_loc.csv`);
+    link.setAttribute("download", `Kho_cau_hoi_${filenameSuffix}_loc.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    onToast(`Đã xuất ${filteredQuestions.length} câu hỏi ra tệp CSV thành công!`, 'success');
+    onToast('Đã xuất kho câu hỏi đã lọc ra tệp CSV thành công!', 'success');
   };
 
-  // Download presets of TXT structure for a complete exam (incorporating MCQs and Essay/TL)
+  // Download presets of TXT structure for a complete exam (incorporating MCQs, TF, SHORT, and ESSAY/TL)
   const downloadExamTemplate = () => {
+    const safeSubjectName = activeSubject.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
+    const filenameSuffix = `${safeSubjectName}${activeSubject.grade}`;
     const txtContent = 
+      "========================================================================\n" +
+      "HƯỚNG DẪN ĐỊNH DẠNG FILE .TXT NHẬP ĐỀ THI VÀO QUICKQUIZ AI\n" +
+      "========================================================================\n" +
+      "- File văn bản thô được lưu dưới định dạng UTF-8.\n" +
+      "- Mỗi câu hỏi được phân tách bằng một dòng trống.\n" +
+      "- Các khóa trường thông tin bao gồm: Chương, Bài, Mức độ, Dạng, Câu, Đáp án, Lời giải.\n" +
+      "- Hệ thống hỗ trợ 4 dạng câu hỏi chuẩn:\n" +
+      "  1. MCQ: Trắc nghiệm khách quan nhiều lựa chọn (Lựa chọn A, B, C, D).\n" +
+      "  2. TF: Trắc nghiệm Đúng/Sai (Nhận định a, b, c, d phân cách bằng dấu phẩy ở Đáp án).\n" +
+      "  3. SHORT: Trắc nghiệm Trả lời ngắn / Điền đáp số.\n" +
+      "  4. ESSAY: Câu hỏi Tự luận (Học sinh trình bày lời giải hệ thống).\n" +
+      "- Công thức Toán/Lý/Hóa sử dụng cú pháp LaTeX chuẩn đặt trong dấu $ (inline) hoặc $$ (block).\n" +
+      "========================================================================\n\n" +
       "Chương: chuong-1\n" +
-      "Bài: Ôn tập chương 1\n" +
+      "Bài: Khái niệm hàm số\n" +
       "Mức độ: Nhận biết\n" +
       "Dạng: MCQ\n" +
-      "Câu: Cho phương trình bậc hai $ax^2 + bx + c = 0$ ($a \\ne 0$). Công thức tính biệt thức $\\Delta$ là:\n" +
-      "A. $\\Delta = b^2 - 4ac$\n" +
-      "B. $\\Delta = b^2 + 4ac$\n" +
-      "C. $\\Delta = b - 4ac$\n" +
-      "D. $\\Delta = b^2 - ac$\n" +
-      "Đáp án: A\n" +
-      "Lời giải: Biệt thức $\\Delta$ của phương trình bậc hai $ax^2 + bx + c = 0$ được tính theo công thức $\\Delta = b^2 - 4ac$.\n\n" +
+      "Câu: Tập xác định của hàm số $y = \\frac{1}{x - 3}$ là:\n" +
+      "A. $D = \\mathbb{R}$\n" +
+      "B. $D = \\mathbb{R} \\setminus \\{3\\}$\n" +
+      "C. $D = [3; +\\infty)$\n" +
+      "D. $D = (3; +\\infty)$\n" +
+      "Đáp án: B\n" +
+      "Lời giải: Hàm số xác định khi mẫu số khác 0, tức là $x - 3 \\ne 0 \\Leftrightarrow x \\ne 3$. Vậy tập xác định là $D = \\mathbb{R} \\setminus \\{3\\}$.\n\n" +
       "Chương: chuong-1\n" +
-      "Bài: Ôn tập chương 1\n" +
+      "Bài: Hàm số bậc hai\n" +
       "Mức độ: Thông hiểu\n" +
-      "Dạng: TL\n" +
-      "Câu: Cho parabol $(P): y = x^2$ và đường thẳng $(d): y = 2x + 3$. Hãy lập luận chứng minh $(d)$ luôn cắt $(P)$ tại hai điểm phân biệt.\n" +
-      "Đáp án: Phương trình hoành độ giao điểm: $x^2 - 2x - 3 = 0$. Có $a \\cdot c = 1 \\cdot (-3) = -3 < 0$, suy ra phương trình luôn có hai nghiệm phân biệt trái dấu.\n" +
-      "Lời giải: Từ phương trình hoành độ giao điểm $x^2 - 2x - 3 = 0$, ta thấy tích hệ số $a$ và $c$ âm, do đó phương trình luôn có 2 nghiệm phân biệt. Parabol luôn giao đường thẳng tại hai điểm có hoành độ trái dấu.\n\n" +
-      "Chương: chuong-2\n" +
+      "Dạng: TF\n" +
+      "Câu: Cho hàm số bậc hai $y = x^2 - 4x + 3$. Hãy xác định tính Đúng/Sai của các khẳng định sau đây:\n" +
+      "a) Đồ thị hàm số là một đường Parabol có bề lõm quay lên trên.\n" +
+      "b) Tọa độ đỉnh của Parabol là $I(2; -1)$.\n" +
+      "c) Hàm số đồng biến trên khoảng $(-\\infty; 2)$.\n" +
+      "d) Đồ thị hàm số cắt trục hoành tại hai điểm phân biệt có hoành độ lần lượt là $x = 1$ và $x = 3$.\n" +
+      "Đáp án: Đúng,Đúng,Sai,Đúng\n" +
+      "Lời giải: Hệ số $a = 1 > 0$ nên bề lõm hướng lên. Hoành độ đỉnh $x_I = -b/(2a) = 2$, tung độ $y_I = 2^2 - 4(2) + 3 = -1$. Hàm số nghịch biến trên $(-\\infty; 2)$ và đồng biến trên $(2; +\\infty)$ nên khẳng định c là Sai. Giao điểm trục hoành là nghiệm của $x^2-4x+3=0$, có nghiệm $x=1, x=3$.\n\n" +
+      "Chương: chuong-1\n" +
       "Bài: Hệ thức lượng trong tam giác\n" +
       "Mức độ: Vận dụng\n" +
-      "Dạng: TL\n" +
-      "Câu: Cho tam giác $ABC$ vuông tại $A$, đường cao $AH$. Biết $HB = 2\\text{cm}, HC = 8\\text{cm}$. Tính độ dài đường cao $AH$ và diện tích tam giác $ABC$.\n" +
-      "Đáp án: $AH = 4\\text{cm}, S = 20\\text{cm}^2$\n" +
-      "Lời giải: Áp dụng hệ thức lượng $AH^2 = HB \\cdot HC = 2 \\cdot 8 = 16 \\Rightarrow AH = 4\\text{cm}$. Cạnh huyền $BC = HB + HC = 10\\text{cm}$. Diện tích $S = \\frac{1}{2} BC \\cdot AH = \\frac{1}{2} \\cdot 10 \\cdot 4 = 20\\text{cm}^2$.\n";
+      "Dạng: SHORT\n" +
+      "Câu: Cho tam giác $ABC$ có cạnh $a = 8$, $b = 10$ và góc $C = 60^\\circ$. Tính độ dài cạnh $c$ của tam giác.\n" +
+      "Đáp án: $2\\sqrt{21}$\n" +
+      "Lời giải: Áp dụng định lí cosin: $c^2 = a^2 + b^2 - 2ab \\cos C = 8^2 + 10^2 - 2 \\cdot 8 \\cdot 10 \\cdot \\cos 60^\\circ = 64 + 100 - 160 \\cdot 0.5 = 164 - 80 = 84$. Suy ra $c = \\sqrt{84} = 2\\sqrt{21}.\n\n" +
+      "Chương: chuong-2\n" +
+      "Bài: Tích vô hướng của hai vectơ\n" +
+      "Mức độ: Vận dụng cao\n" +
+      "Dạng: ESSAY\n" +
+      "Câu: Trong mặt phẳng tọa độ $Oxy$, cho ba điểm $A(1; 2)$, $B(-2; 6)$, và $C(9; 8)$. Chứng minh rằng tam giác $ABC$ vuông tại $A$ và tính diện tích tam giác.\n" +
+      "Đáp án: Vuông tại $A$, diện tích $S = 25$\n" +
+      "Lời giải: Ta tìm tọa độ các vectơ: \\vec{AB} = (-3; 4), có độ dài AB = 5. \\vec{AC} = (8; 6), có độ dài AC = 10. Tích vô hướng \\vec{AB}.\\vec{AC} = 0 nên tam giác vuông tại A. Diện tích S = 0.5 * AB * AC = 25.\n";
 
     const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Mau_de_thi_tu_luan_va_trac_nghiem_${activeSubject.id}.txt`);
+    link.setAttribute("download", `Mau_de_thi_tu_luan_va_trac_nghiem_${filenameSuffix}.txt`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1051,17 +1133,73 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
               currentQuestion.level = 'Nhận biết';
             }
           } else if (typeMatch) {
-            const rawType = typeMatch[1].trim().toUpperCase();
-            if (rawType.includes('SHORT_ANSWER') || rawType.includes('SHORT') || rawType.includes('SHORT_ANSWER_SHORT') || rawType.includes('TỰ LUẬN NGẮN')) {
-              currentQuestion.type = 'SHORT_ANSWER';
-            } else if (rawType.includes('TRUE_FALSE') || rawType.includes('ĐÚNG_SAI') || rawType.includes('ĐÚNG / SAI') || rawType.includes('ĐÚNG/SAI') || rawType.includes('TF')) {
-              currentQuestion.type = 'TRUE_FALSE';
-            } else if (rawType.includes('MATCHING') || rawType.includes('NỐI') || rawType.includes('NỐI CẶP')) {
-              currentQuestion.type = 'MATCHING';
-            } else if (rawType.includes('ESSAY') || rawType.includes('SHORT_ESSAY') || rawType.includes('TỰ LUẬN DÀI') || rawType.includes('TỰ LUẬN') || rawType.includes('TL')) {
+            const rawTypeStr = typeMatch[1].trim();
+            const rawType = rawTypeStr.toUpperCase();
+            
+            // Check SHORT_ESSAY / ESSAY first to avoid matching SHORT_ANSWER via .includes('SHORT')
+            if (
+              rawType === 'ESSAY' || 
+              rawType === 'SHORT_ESSAY' || 
+              rawType === 'TL' || 
+              rawType === 'TLN' || 
+              rawType === 'TUT_LUAN' || 
+              rawType === 'TU_LUAN' || 
+              rawType === 'TỰ LUẬN' || 
+              rawTypeStr.includes('Tự luận') || 
+              rawTypeStr.includes('TỰ LUẬN')
+            ) {
               currentQuestion.type = 'SHORT_ESSAY';
-            } else if (rawType.includes('FILL') || rawType.includes('BLANK')) {
+            } else if (
+              rawType.includes('SHORT_ANSWER') || 
+              rawType === 'SHORT' || 
+              rawType === 'SHORT_ANSWER_SHORT' || 
+              rawType.includes('TỰ LUẬN NGẮN') || 
+              rawType === 'TRẢ LỜI NGẮN' || 
+              rawType === 'TRA_LOI_NGAN' || 
+              rawType === 'ĐIỀN TỪ NGẮN' || 
+              rawType === 'DIEN_TU_NGAN' || 
+              rawType === 'DIEN_KHUYET' ||
+              rawType === 'ĐIỀN KHUYẾT' ||
+              rawTypeStr.includes('Trả lời ngắn') || 
+              rawTypeStr.includes('TRẢ LỜI NGẮN') ||
+              rawTypeStr.includes('Điền khuyết') ||
+              rawTypeStr.includes('Điền từ ngắn')
+            ) {
+              currentQuestion.type = 'SHORT_ANSWER';
+            } else if (
+              rawType === 'TRUE_FALSE' || 
+              rawType === 'ĐÚNG_SAI' || 
+              rawType === 'DUNG_SAI' || 
+              rawType === 'ĐÚNG / SAI' || 
+              rawType === 'ĐÚNG/SAI' || 
+              rawType === 'TF' || 
+              rawTypeStr.includes('Đúng/Sai') || 
+              rawTypeStr.includes('ĐÚNG / SAI')
+            ) {
+              currentQuestion.type = 'TRUE_FALSE';
+            } else if (
+              rawType === 'MATCHING' || 
+              rawType === 'NỐI' || 
+              rawType === 'NỐI CẶP' || 
+              rawType === 'GHÉP CẶP' || 
+              rawTypeStr.includes('Ghép cặp') || 
+              rawTypeStr.includes('GHÉP CẶP')
+            ) {
+              currentQuestion.type = 'MATCHING';
+            } else if (
+              rawType.includes('FILL') || 
+              rawType.includes('BLANK')
+            ) {
               currentQuestion.type = 'FILL_BLANK';
+            } else if (
+              rawType === 'MULTIPLE_CHOICE' || 
+              rawType === 'TRAC_NGHIEM' || 
+              rawType === 'TN' || 
+              rawType === 'MCQ' || 
+              rawTypeStr.includes('Trắc nghiệm') || 
+              rawTypeStr.includes('TRẮC NGHIỆM')
+            ) {
+              currentQuestion.type = 'MCQ';
             } else {
               currentQuestion.type = 'MCQ';
             }
@@ -1174,7 +1312,8 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
         }
       });
 
-      setParsedTestQuestions(parsedData);
+      const normalizedParsedData = parsedData.map(normalizeQuestion);
+      setParsedTestQuestions(normalizedParsedData);
       setImportTestTitle(file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " "));
       onToast(`Nạp thành công ${parsedData.length} câu hỏi tự luận & trắc nghiệm! Hãy thiết lập tiêu đề & lượng thời gian bên dưới.`, 'success');
     };
@@ -1645,17 +1784,73 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
             currentQuestion.level = 'Nhận biết';
           }
         } else if (typeMatch) {
-          const rawType = typeMatch[1].trim().toUpperCase();
-          if (rawType.includes('SHORT_ANSWER') || rawType.includes('SHORT') || rawType.includes('SHORT_ANSWER_SHORT') || rawType.includes('TỰ LUẬN NGẮN') || rawType.includes('TL')) {
-            currentQuestion.type = 'SHORT_ANSWER';
-          } else if (rawType.includes('TRUE_FALSE') || rawType.includes('ĐÚNG_SAI') || rawType.includes('ĐÚNG / SAI') || rawType.includes('ĐÚNG/SAI') || rawType.includes('TF')) {
-            currentQuestion.type = 'TRUE_FALSE';
-          } else if (rawType.includes('MATCHING') || rawType.includes('NỐI') || rawType.includes('NỐI CẶP')) {
-            currentQuestion.type = 'MATCHING';
-          } else if (rawType.includes('ESSAY') || rawType.includes('SHORT_ESSAY') || rawType.includes('TỰ LUẬN DÀI')) {
+          const rawTypeStr = typeMatch[1].trim();
+          const rawType = rawTypeStr.toUpperCase();
+          
+          // Check SHORT_ESSAY / ESSAY first to avoid matching SHORT_ANSWER via .includes('SHORT')
+          if (
+            rawType === 'ESSAY' || 
+            rawType === 'SHORT_ESSAY' || 
+            rawType === 'TL' || 
+            rawType === 'TLN' || 
+            rawType === 'TUT_LUAN' || 
+            rawType === 'TU_LUAN' || 
+            rawType === 'TỰ LUẬN' || 
+            rawTypeStr.includes('Tự luận') || 
+            rawTypeStr.includes('TỰ LUẬN')
+          ) {
             currentQuestion.type = 'SHORT_ESSAY';
-          } else if (rawType.includes('FILL') || rawType.includes('BLANK')) {
+          } else if (
+            rawType.includes('SHORT_ANSWER') || 
+            rawType === 'SHORT' || 
+            rawType === 'SHORT_ANSWER_SHORT' || 
+            rawType.includes('TỰ LUẬN NGẮN') || 
+            rawType === 'TRẢ LỜI NGẮN' || 
+            rawType === 'TRA_LOI_NGAN' || 
+            rawType === 'ĐIỀN TỪ NGẮN' || 
+            rawType === 'DIEN_TU_NGAN' || 
+            rawType === 'DIEN_KHUYET' ||
+            rawType === 'ĐIỀN KHUYẾT' ||
+            rawTypeStr.includes('Trả lời ngắn') || 
+            rawTypeStr.includes('TRẢ LỜI NGẮN') ||
+            rawTypeStr.includes('Điền khuyết') ||
+            rawTypeStr.includes('Điền từ ngắn')
+          ) {
+            currentQuestion.type = 'SHORT_ANSWER';
+          } else if (
+            rawType === 'TRUE_FALSE' || 
+            rawType === 'ĐÚNG_SAI' || 
+            rawType === 'DUNG_SAI' || 
+            rawType === 'ĐÚNG / SAI' || 
+            rawType === 'ĐÚNG/SAI' || 
+            rawType === 'TF' || 
+            rawTypeStr.includes('Đúng/Sai') || 
+            rawTypeStr.includes('ĐÚNG / SAI')
+          ) {
+            currentQuestion.type = 'TRUE_FALSE';
+          } else if (
+            rawType === 'MATCHING' || 
+            rawType === 'NỐI' || 
+            rawType === 'NỐI CẶP' || 
+            rawType === 'GHÉP CẶP' || 
+            rawTypeStr.includes('Ghép cặp') || 
+            rawTypeStr.includes('GHÉP CẶP')
+          ) {
+            currentQuestion.type = 'MATCHING';
+          } else if (
+            rawType.includes('FILL') || 
+            rawType.includes('BLANK')
+          ) {
             currentQuestion.type = 'FILL_BLANK';
+          } else if (
+            rawType === 'MULTIPLE_CHOICE' || 
+            rawType === 'TRAC_NGHIEM' || 
+            rawType === 'TN' || 
+            rawType === 'MCQ' || 
+            rawTypeStr.includes('Trắc nghiệm') || 
+            rawTypeStr.includes('TRẮC NGHIỆM')
+          ) {
+            currentQuestion.type = 'MCQ';
           } else {
             currentQuestion.type = 'MCQ';
           }
@@ -1815,7 +2010,8 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
       }
     });
 
-    const approvedParsedData = parsedData.filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK' || q.type === 'SHORT_ESSAY');
+    const normalizedParsedData = parsedData.map(normalizeQuestion);
+    const approvedParsedData = normalizedParsedData.filter(q => q.type === 'MCQ' || q.type === 'TRUE_FALSE' || q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK' || q.type === 'SHORT_ESSAY');
     setParsedImportQuestions(approvedParsedData);
     onToast(`Đã sơ thảo ${approvedParsedData.length} câu hỏi tự động từ tệp TXT! Vui lòng xem trước dữ liệu bên dưới trước khi đồng ý nhập.`, 'success');
   };
@@ -3419,7 +3615,12 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
                       {parsedImportQuestions.map((pq, pI) => (
                         <tr key={pI} className="text-slate-700 hover:bg-slate-100">
                           <td className="p-2 font-semibold truncate max-w-[200px]" title={pq.content}>{pq.content}</td>
-                          <td className="p-2 font-mono">{pq.type}</td>
+                          <td className="p-2 font-mono">
+                            {pq.type === 'MCQ' ? 'Trắc nghiệm (MCQ)' :
+                             pq.type === 'TRUE_FALSE' ? 'Đúng/Sai (TF)' :
+                             pq.type === 'SHORT_ANSWER' ? 'Trả lời ngắn (SHORT)' :
+                             pq.type === 'SHORT_ESSAY' ? 'Tự luận (ESSAY)' : pq.type}
+                          </td>
                           <td className="p-2">{pq.level}</td>
                           <td className="p-2 font-bold text-center text-emerald-700">{pq.correctAnswer}</td>
                         </tr>
@@ -3565,16 +3766,43 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({
                     <span>📑</span> Bước 1: Xem cấu trúc đề thi mẫu
                   </h4>
                   <p className="text-slate-500 text-[11px] leading-relaxed mb-3">
-                    Đề thi có mẫu chuẩn bao gồm các câu hỏi <strong>Trắc nghiệm (MCQ)</strong>, <strong>Đúng/Sai (TF)</strong>, và <strong>Tự luận (TL)</strong>. 
+                    Đề thi có mẫu chuẩn bao gồm các câu hỏi <strong>Trắc nghiệm (MCQ)</strong>, <strong>Đúng/Sai (TF)</strong>, <strong>Trả lời ngắn (SHORT)</strong>, và <strong>Tự luận (ESSAY)</strong>. Min-LaTeX được hỗ trợ thông qua biểu thức dạng $...$
                   </p>
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200 font-mono text-[9px] text-indigo-950 mb-3 max-h-[140px] overflow-y-auto">
-                    Chương: Đại số 10<br />
-                    Bài: Ôn tập chương 1<br />
-                    Mức độ: Nhận biết<br />
-                    Dạng: TL<br />
-                    Câu: Lập luận giải phương trình $x^2 - 4x + 3 = 0$.<br />
-                    Đáp án: Nghiệm là $x_1=1, x_2=3$<br />
-                    Lời giải: Phân tích thành nhân tử $(x-1)(x-3)=0$<br />
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200 font-mono text-[9px] text-indigo-950 mb-3 max-h-[140px] overflow-y-auto space-y-3">
+                    <div>
+                      <span className="text-[10px] text-emerald-700 font-bold"># 1. Trắc nghiệm (MCQ)</span><br />
+                      Chương: Đại số 10<br />
+                      Dạng: MCQ<br />
+                      {"Câu: Số phần tử của tập hợp $A = \\{1; 2; 3\\}$ là:"}<br />
+                      A. 1<br />B. 2<br />C. 3<br />D. 4<br />
+                      Đáp án: C<br />
+                      Lời giải: Tập A có 3 phần tử.<br />
+                    </div>
+                    <div className="border-t border-slate-100 pt-1.5">
+                      <span className="text-[10px] text-orange-700 font-bold"># 2. Đúng/Sai (TF)</span><br />
+                      Dạng: TF<br />
+                      Câu: Xác định tính Đúng/Sai của khẳng định:<br />
+                      a) Hàm số $y=x^2$ đồng biến trên $[0; +\infty)$.<br />
+                      b) Đồ thị của $y=x^2$ đi qua điểm $(1; 2)$.<br />
+                      c) Tọa độ đỉnh là $(0;0)$.<br />
+                      d) Đồ thị có trục đối xứng là $x=1$.<br />
+                      Đáp án: Đúng,Sai,Đúng,Sai<br />
+                      Lời giải: Đi qua điểm $(1; 1)$.<br />
+                    </div>
+                    <div className="border-t border-slate-100 pt-1.5">
+                      <span className="text-[10px] text-blue-700 font-bold"># 3. Trả lời ngắn (SHORT)</span><br />
+                      Dạng: SHORT<br />
+                      Câu: Giải phương trình $2x - 4 = 0$.<br />
+                      Đáp án: 2<br />
+                      Lời giải: Ta có $2x=4 \Rightarrow x=2$.<br />
+                    </div>
+                    <div className="border-t border-slate-100 pt-1.5">
+                      <span className="text-[10px] text-purple-700 font-bold"># 4. Tự luận (ESSAY)</span><br />
+                      Dạng: ESSAY<br />
+                      Câu: Lập luận giải phương trình $x^2 - 4x + 3 = 0$.<br />
+                      Đáp án: $x=1, x=3$<br />
+                      Lời giải: Phân tích thành nhân tử $(x-1)(x-3)=0$<br />
+                    </div>
                   </div>
                 </div>
                 <button

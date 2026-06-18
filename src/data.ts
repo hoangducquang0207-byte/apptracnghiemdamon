@@ -327,6 +327,37 @@ export const generateSampleQuestions = (): Question[] => {
     }
   }
 
+  // Thêm câu hỏi tự luận mẫu cho Toán học và Khoa học tự nhiên lớp 6
+  q.push({
+    id: 'Q-M-ESSAY',
+    subjectId: 'TOAN6',
+    chapterId: 'T6-C1',
+    lessonId: 'T6-C1-B3',
+    type: 'SHORT_ESSAY',
+    level: 'Vận dụng cao',
+    content: 'Em hãy viết lời giải cho câu hỏi: Cho biểu thức $A = x^2 - 4x + 12$. Chứng minh rằng biểu thức $A$ luôn nhận giá trị dương với mọi số thực $x$. Tìm giá trị nhỏ nhất của $A$ và giá trị của $x$ tương ứng.',
+    options: [],
+    correctAnswer: 'A = (x-2)^2 + 8 >= 8 > 0. GTNN là 8 tại x = 2.',
+    explanation: 'Biến đổi $A = (x^2 - 4x + 4) + 8 = (x-2)^2 + 8$. Do $(x-2)^2 \\ge 0$ với mọi $x$ nên $A \\ge 8 > 0$.',
+    source: 'Giáo viên',
+    tags: ['Đại số', 'Tự luận', 'Vận dụng cao']
+  });
+
+  q.push({
+    id: 'Q-S-ESSAY',
+    subjectId: 'KHTN6',
+    chapterId: 'K6-C2',
+    lessonId: 'K6-C2-B2',
+    type: 'SHORT_ESSAY',
+    level: 'Vận dụng',
+    content: 'Cấu trúc của ba thể của nước (rắn, lỏng, khí) khác nhau như thế nào? Hãy viết một đoạn văn ngắn giải thích tại sao khi nước đóng băng thành đá lại nổi trên mặt nước lỏng.',
+    options: [],
+    correctAnswer: 'Mạng tinh thể rỗng của nước đá làm giảm mật độ phân tử, dẫn đến trọng lượng riêng nhỏ hơn.',
+    explanation: 'Khi đóng băng, các phân tử nước liên kết hydro tạo mạng lục giác rỗng có thể tích lớn hơn, làm giảm khối lượng riêng.',
+    source: 'Giáo viên',
+    tags: ['Các thể', 'Vật lý', 'Tự luận']
+  });
+
   return q;
 };
 
@@ -351,7 +382,10 @@ export const DEFAULT_TESTS: Test[] = [
     purpose: 'Kiểm tra đầu giờ',
     createdAt: '2026-06-01',
     status: 'Đã giao',
-    questions: DEFAULT_QUESTIONS.filter(q => q.subjectId === 'TOAN6').slice(0, 5)
+    questions: [
+      ...DEFAULT_QUESTIONS.filter(q => q.subjectId === 'TOAN6').slice(0, 5),
+      ...DEFAULT_QUESTIONS.filter(q => q.id === 'Q-M-ESSAY')
+    ]
   },
   {
     id: 'TEST-002',
@@ -363,7 +397,10 @@ export const DEFAULT_TESTS: Test[] = [
     purpose: 'Ôn tập chương',
     createdAt: '2026-06-05',
     status: 'Đã giao',
-    questions: DEFAULT_QUESTIONS.filter(q => q.subjectId === 'KHTN6' && q.chapterId === 'K6-C2').slice(0, 5)
+    questions: [
+      ...DEFAULT_QUESTIONS.filter(q => q.subjectId === 'KHTN6' && q.chapterId === 'K6-C2').slice(0, 5),
+      ...DEFAULT_QUESTIONS.filter(q => q.id === 'Q-S-ESSAY')
+    ]
   },
   {
     id: 'TEST-003',
@@ -443,5 +480,43 @@ export const DEFAULT_ATTEMPTS: QuizAttempt[] = [
     submittedAt: '2026-06-06 14:20',
     feedback: 'Xuất sắc! Em nắm vững kiến thức đo chiều dài và khối lượng.',
     isGraded: true
+  },
+  {
+    id: 'ATT-ESSAY-01',
+    testId: 'TEST-001',
+    studentId: 'STU-003',
+    studentName: 'Lê Hoàng Hải',
+    className: '6A1',
+    answers: { 
+      'Q-M01': 'C', 'Q-M02': 'A', 'Q-M03': 'Đúng', 'Q-M04': 'B', 'Q-M05': '102',
+      'Q-M-ESSAY': 'Lời giải chi tiết tập hợp: Ta có: A = x^2 - 4x + 12 = x^2 - 4x + 4 + 8 = (x - 2)^2 + 8. Vì (x - 2)^2 >= 0 với mọi x => A >= 8 > 0. GTNN bằng 8 đạt được khi x = 2.'
+    },
+    studentImages: {
+      'Q-M-ESSAY': `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"><rect width="100%" height="100%" fill="%23fcf8f2"/><path d="M 0,30 L 300,30 M 0,60 L 300,60 M 0,90 L 300,90 M 0,120 L 300,120 M 0,150 L 300,150 M 0,180 L 300,180 M 0,210 L 300,210" stroke="%23dfd0c0" stroke-width="1"/><line x1="40" y1="0" x2="40" y2="400" stroke="%23ff9999" stroke-width="1"/><text x="50" y="50" font-family="'Times New Roman', serif" font-size="14" font-weight="bold" fill="%231a365d">BÀI GIẢI TỰ LUẬN TOÁN HỌC</text><text x="50" y="80" font-family="'Times New Roman', serif" font-size="12" fill="%232d3748">Ta có: A = x^2 - 4x + 12</text><text x="50" y="110" font-family="'Times New Roman', serif" font-size="12" fill="%232d3748">       = x^2 - 2 * 2 * x + 2^2 + 8</text><text x="50" y="140" font-family="'Times New Roman', serif" font-size="12" fill="%232d3748">       = (x - 2)^2 + 8</text><text x="50" y="170" font-family="'Times New Roman', serif" font-size="12" fill="%232d3748">Vì (x - 2)^2 &gt;= 0 với mọi x</text><text x="50" y="200" font-family="'Times New Roman', serif" font-size="12" fill="%232d3748">=&gt; (x - 2)^2 + 8 &gt;= 8 &gt; 0 với mọi x (đpcm)</text><text x="50" y="235" font-family="'Times New Roman', serif" font-size="11" font-style="italic" fill="%23718096">Học sinh: Lê Hoàng Hải - Lớp 6A1</text></svg>`
+    },
+    score: 0,
+    timeSpent: 520,
+    submittedAt: '2026-06-15 10:14',
+    feedback: '',
+    isGraded: false
+  },
+  {
+    id: 'ATT-ESSAY-02',
+    testId: 'TEST-002',
+    studentId: 'STU-004',
+    studentName: 'Phạm Gia Bảo',
+    className: '6A1',
+    answers: { 
+      'Q-S01': 'C', 'Q-S02': 'Sai', 'Q-S03': 'kilôgam', 'Q-S04': 'A', 'Q-S05': 'bay hơi',
+      'Q-S-ESSAY': 'Thể rắn có các phần tử xếp khít nhau; thể lỏng có các phân tử xa nhau hơn; thể khí các phân tử bay tự do. Nước đá lạnh có mạng tinh thể lục giác rỗng chứa các lỗ hổng khí nên thể tích đá tăng lên, khối lượng riêng giảm đi nên nó nổi lên trên nước lỏng.'
+    },
+    studentImages: {
+      'Q-S-ESSAY': `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400"><rect width="100%" height="100%" fill="%23f0f7f4"/><path d="M 0,30 L 300,30 M 0,60 L 300,60 M 0,90 L 300,90 M 0,120 L 300,120 M 0,150 L 300,150" stroke="%23d2dfd8" stroke-width="1"/><line x1="40" y1="0" x2="40" y2="400" stroke="%2399e6b3" stroke-width="1"/><text x="50" y="50" font-family="'Times New Roman', serif" font-size="13" font-weight="bold" fill="%231a365d">BÀI GIẢI TỰ LUẬN KHOA HỌC</text><text x="50" y="80" font-family="'Times New Roman', serif" font-size="11" fill="%232d3748">Đặc điểm cấu tạo ba thể của nước:</text><text x="50" y="110" font-family="'Times New Roman', serif" font-size="11" fill="%232d3748">- Thể rắn (đá): Phần tử đứng yên, khít.</text><text x="50" y="130" font-family="'Times New Roman', serif" font-size="11" fill="%232d3748">- Thể lỏng (nước): Phần tử trượt lên nhau.</text><text x="50" y="150" font-family="'Times New Roman', serif" font-size="11" fill="%232d3748">- Thể khí (hơi): Các phân tử chuyển động tự do.</text><text x="50" y="180" font-family="'Times New Roman', serif" font-size="11" fill="%232d3748">Khi đông đá, nước nở ra tạo mạng lục giác rỗng,</text><text x="50" y="200" font-family="'Times New Roman', serif" font-size="11" fill="%232d3748">thể tích tăng => d bé hơn d nước lỏng nên nổi.</text></svg>`
+    },
+    score: 0,
+    timeSpent: 410,
+    submittedAt: '2026-06-16 11:20',
+    feedback: '',
+    isGraded: false
   }
 ];

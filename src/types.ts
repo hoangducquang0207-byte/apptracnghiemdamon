@@ -87,6 +87,7 @@ export interface QuizAttempt {
   className: string;
   answers: { [questionId: string]: string };
   studentImages?: { [questionId: string]: string }; // base64 or photo URL
+  generalWorksheetImages?: string[]; // base64 or photo URLs of student full worksheets
   gradedDetails?: { 
     [questionId: string]: { 
       score: number; 
@@ -144,6 +145,27 @@ export function generateStudentPassword(className: string, studentName: string):
 }
 
 export function normalizeQuestion(q: Question): Question {
+  // Normalize casing and synonyms for question types to avoid any missing content
+  let mappedType = q.type ? q.type.toString().trim() : 'MCQ';
+  const upperType = mappedType.toUpperCase();
+  
+  if (upperType === 'ESSAY' || upperType === 'SHORT_ESSAY' || upperType === 'TL' || upperType === 'TỰ LUẬN' || upperType === 'TU_LUAN' || upperType === 'TLN' || mappedType.includes('Tự luận') || mappedType.includes('TỰ LUẬN')) {
+    mappedType = 'SHORT_ESSAY';
+  } else if (upperType === 'MULTIPLE_CHOICE' || upperType === 'TRAC_NGHIEM' || upperType === 'TN' || upperType === 'MCQ' || mappedType.includes('Trắc nghiệm') || mappedType.includes('TRẮC NGHIỆM')) {
+    mappedType = 'MCQ';
+  } else if (upperType === 'TRUE_FALSE' || upperType === 'ĐÚNG/SAI' || upperType === 'DUNG_SAI' || upperType === 'TF' || mappedType.includes('Đúng/Sai') || mappedType.includes('ĐÚNG / SAI')) {
+    mappedType = 'TRUE_FALSE';
+  } else if (upperType === 'SHORT_ANSWER' || upperType === 'SHORT' || upperType === 'FILL_BLANK' || upperType === 'FILL_IN_THE_BLANK' || upperType === 'TRẢ LỜI NGẮN' || upperType === 'DIEN_KHUYET' || mappedType.includes('Trả lời ngắn') || mappedType.includes('TRẢ LỜI NGẮN') || mappedType.includes('Điền khuyết') || mappedType.includes('Điền từ ngắn') || mappedType.includes('Điền từ')) {
+    mappedType = 'SHORT_ANSWER';
+  } else if (upperType === 'MATCHING' || upperType === 'GHÉP CẶP' || upperType === 'GHEP_CAP' || mappedType.includes('Ghép cặp') || mappedType.includes('GHÉP CẶP')) {
+    mappedType = 'MATCHING';
+  } else {
+    // Default fallback
+    mappedType = 'MCQ';
+  }
+
+  q = { ...q, type: mappedType as any };
+
   // If it's MCQ but answer is a True/False string, normalise it to TRUE_FALSE
   if (q.type === 'MCQ') {
     const hasNoOptions = !q.options || q.options.length === 0 || q.options.every(o => !o || o.replace(/^[A-H]\.\s*/, '').trim() === '');

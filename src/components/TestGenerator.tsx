@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SubjectConfig, Question, Test, QuestionType, CognitiveLevel } from '../types';
+import { SubjectConfig, Question, Test, QuestionType, CognitiveLevel, normalizeQuestion } from '../types';
 import { MathRenderer } from './MathRenderer';
 import { Sparkles, Check, FileText, ClipboardList, Download, Save, RefreshCw } from 'lucide-react';
 
@@ -104,6 +104,42 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
   };
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
 
+  const applyPreset = (presetName: string) => {
+    if (presetName === 'gdpt2018') {
+      const formats: QuestionType[] = ['MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'SHORT_ESSAY'];
+      const counts = { MCQ: 12, TRUE_FALSE: 2, SHORT_ANSWER: 2, SHORT_ESSAY: 3, FILL_BLANK: 0, MATCHING: 0 };
+      const percents = { MCQ: 30, TRUE_FALSE: 20, SHORT_ANSWER: 20, SHORT_ESSAY: 30, FILL_BLANK: 0, MATCHING: 0 };
+      const points = { MCQ: 0.25, TRUE_FALSE: 1.0, SHORT_ANSWER: 1.0, SHORT_ESSAY: 1.0, FILL_BLANK: 0.5, MATCHING: 1.0 };
+      setFormatPoints(points);
+      updateFormatParams(formats, counts, percents, 'count');
+      onToast('Đã cấu hình cấu trúc năng lực chuẩn GDPT 2018 theo Công văn 7991/BGDĐT (12 MCQ, 2 Đ/S, 2 Trả lời ngắn, 3 Tự luận)!', 'success');
+    } else if (presetName === 'new_objective') {
+      const formats: QuestionType[] = ['MCQ', 'TRUE_FALSE', 'SHORT_ANSWER'];
+      const counts = { MCQ: 12, TRUE_FALSE: 4, SHORT_ANSWER: 6, SHORT_ESSAY: 0, FILL_BLANK: 0, MATCHING: 0 };
+      const percents = { MCQ: 55, TRUE_FALSE: 20, SHORT_ANSWER: 25, SHORT_ESSAY: 0, FILL_BLANK: 0, MATCHING: 0 };
+      const points = { MCQ: 0.25, TRUE_FALSE: 1.0, SHORT_ANSWER: 0.5, SHORT_ESSAY: 1.0, FILL_BLANK: 0.5, MATCHING: 1.0 };
+      setFormatPoints(points);
+      updateFormatParams(formats, counts, percents, 'count');
+      onToast('Đã cấu hình 100% trắc nghiệm khách quan mới (không tự luận)!', 'success');
+    } else if (presetName === 'traditional_hybrid') {
+      const formats: QuestionType[] = ['MCQ', 'SHORT_ANSWER', 'SHORT_ESSAY'];
+      const counts = { MCQ: 16, TRUE_FALSE: 0, SHORT_ANSWER: 4, SHORT_ESSAY: 2, FILL_BLANK: 0, MATCHING: 0 };
+      const percents = { MCQ: 70, TRUE_FALSE: 0, SHORT_ANSWER: 20, SHORT_ESSAY: 10, FILL_BLANK: 0, MATCHING: 0 };
+      const points = { MCQ: 0.25, TRUE_FALSE: 1.0, SHORT_ANSWER: 0.5, SHORT_ESSAY: 2.0, FILL_BLANK: 0.5, MATCHING: 1.0 };
+      setFormatPoints(points);
+      updateFormatParams(formats, counts, percents, 'count');
+      onToast('Đã cấu hình định dạng Truyền thống tích hợp (MCQ + Trả lời ngắn + Tự luận)!', 'success');
+    } else if (presetName === 'pure_essay') {
+      const formats: QuestionType[] = ['SHORT_ESSAY'];
+      const counts = { MCQ: 0, TRUE_FALSE: 0, SHORT_ANSWER: 0, SHORT_ESSAY: 4, FILL_BLANK: 0, MATCHING: 0 };
+      const percents = { MCQ: 0, TRUE_FALSE: 0, SHORT_ANSWER: 0, SHORT_ESSAY: 100, FILL_BLANK: 0, MATCHING: 0 };
+      const points = { MCQ: 0.25, TRUE_FALSE: 1.0, SHORT_ANSWER: 1.0, SHORT_ESSAY: 2.5, FILL_BLANK: 1.0, MATCHING: 1.0 };
+      setFormatPoints(points);
+      updateFormatParams(formats, counts, percents, 'count');
+      onToast('Đã cấu hình đề kiểm tra tự luận thuần túy (4 câu - 100% Tự luận)!', 'success');
+    }
+  };
+
   // Selected Chapters & Lessons for AI generation (Support Selecting Multiple)
   const [selectedChapters, setSelectedChapters] = useState<string[]>([]);
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]);
@@ -150,7 +186,7 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
           formats: aiParams.formats,
           cognitivePercent: aiParams.cognitivePercent,
           formatPercent: aiParams.formatPercent,
-          formatCount: aiParams.configMode === 'count' ? aiParams.formatCount : undefined,
+          formatCount: aiParams.formatCount,
           useRealLifeScenarios: aiParams.useRealLifeScenarios,
           clientApiKey: apiKey || undefined,
         }),
@@ -164,14 +200,12 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
       const generatedData = await response.json();
       if (generatedData && generatedData.questions) {
         const newQuestions: Question[] = generatedData.questions.map((q: any, idx: number) => {
-          const qType = q.type || 'MCQ';
-          const assignedPoints = formatPoints[qType] !== undefined ? formatPoints[qType] : 1.0;
-          return {
+          const rawQ = {
             id: q.id || `AI-Q-${Date.now()}-${idx}`,
             subjectId: activeSubject.id,
             chapterId: selectedChapters[0] || activeSubject.chapters[0]?.id || '',
             lessonId: selectedLessons[0] || (selectedChapters[0] ? (activeSubject.chapters.find(c => c.id === selectedChapters[0])?.lessons[0]?.id || '') : '') || activeSubject.chapters[0]?.lessons[0]?.id || '',
-            type: qType,
+            type: q.type || 'MCQ',
             level: q.level || 'Thông hiểu',
             content: q.content,
             options: q.options || undefined,
@@ -181,6 +215,11 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
             learningOutcome: q.learningOutcome || 'Chuẩn yêu cầu cần đạt.',
             source: 'AI' as const,
             tags: ['AI Sinh Đề', aiParams.purpose],
+          };
+          const normalized = normalizeQuestion(rawQ as Question);
+          const assignedPoints = formatPoints[normalized.type] !== undefined ? formatPoints[normalized.type] : 1.0;
+          return {
+            ...normalized,
             points: assignedPoints,
           };
         });
@@ -428,10 +467,13 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
         throw new Error('Vui lòng kiểm tra lại cấu trúc vạch đầu dòng.');
       }
 
-      const withCustomPoints = parsedList.map(q => ({
-        ...q,
-        points: formatPoints[q.type] !== undefined ? formatPoints[q.type] : 1.0
-      }));
+      const withCustomPoints = parsedList.map(q => {
+        const normalized = normalizeQuestion(q as Question);
+        return {
+          ...normalized,
+          points: formatPoints[normalized.type] !== undefined ? formatPoints[normalized.type] : 1.0
+        };
+      });
 
       const newTest: Test = {
         id: `TEST-IMP-${Date.now()}`,
@@ -500,7 +542,77 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
 
       {/* CONTENT TAB 1: AI GENERATOR / AUTOMATED */}
       {subTab === 'ai' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
+        <div className="flex flex-col gap-6 animate-fadeIn">
+          {/* QUICK PRESET STRUCTURES FOR GDPT 2018 */}
+          <div className="bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-indigo-500/5 border border-slate-200/80 p-5 rounded-2xl flex flex-col gap-3 text-left">
+            <div className="flex items-center gap-1.5 text-emerald-950">
+              <span className="text-sm">🎯</span>
+              <span className="text-xs font-extrabold uppercase tracking-wider">
+                Mẫu cấu trúc đề thi nhanh (Phù hợp và đáp ứng chuẩn GDPT 2018 mới)
+              </span>
+              <span className="text-[10px] bg-emerald-100/80 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full select-none ml-auto">
+                Khuyên dùng
+              </span>
+            </div>
+            <p className="text-[10.5px] mt-0.5 text-slate-500 leading-relaxed font-sans">
+              Chọn cấu trúc đề thi định sẵn dưới đây để hệ thống tự động gán chính xác các câu hỏi và cơ cấu điểm số theo các văn bản chỉ đạo của Bộ Giáo dục & Đào tạo Việt Nam:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-1.5 animate-fadeIn">
+              <button
+                type="button"
+                onClick={() => applyPreset('gdpt2018')}
+                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer text-left flex flex-col gap-1 hover:border-emerald-300 shadow-3xs"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[11px] font-black text-slate-800">Cấu trúc CV 7991 (Mới)</span>
+                  <span className="text-[9px] bg-emerald-50 text-emerald-700 px-1 py-0.2 rounded font-bold">Chuẩn Bộ</span>
+                </div>
+                <span className="text-[10px] text-emerald-700 font-bold">19 câu (12 MCQ, 2 Đ/S, 2 Ngắn, 3 TL)</span>
+                <span className="text-[9px] text-slate-400 mt-0.5 leading-snug">Cơ cấu 30% MCQ - 20% Đ/S - 20% Trả lời ngắn - 30% Tự luận theo đúng Công văn 7991.</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => applyPreset('new_objective')}
+                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer text-left flex flex-col gap-1 hover:border-teal-300 shadow-3xs"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[11px] font-black text-slate-800">100% Trắc Nghiệm Mới</span>
+                  <span className="text-[9px] bg-teal-50 text-teal-700 px-1 py-0.2 rounded font-bold">Tự Động</span>
+                </div>
+                <span className="text-[10px] text-teal-700 font-bold">22 câu (12 MCQ, 4 Đ/S, 6 Ngắn)</span>
+                <span className="text-[9px] text-slate-400 mt-0.5 leading-snug">Kiểm tra nhanh chính xác khách quan đầy đủ, không chấm tự luận tay.</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => applyPreset('traditional_hybrid')}
+                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer text-left flex flex-col gap-1 hover:border-indigo-300 shadow-3xs"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[11px] font-black text-slate-800">Tích Hợp Học Kỳ</span>
+                  <span className="text-[9px] bg-indigo-50 text-indigo-700 px-1 py-0.2 rounded font-bold">Phổ Biến</span>
+                </div>
+                <span className="text-[10px] text-indigo-700 font-bold">22 câu (16 MCQ, 4 Ngắn, 2 TL)</span>
+                <span className="text-[9px] text-slate-400 mt-0.5 leading-snug">Thân thuộc với khối lớp 6,7,8,9 giúp tổng duyệt kiến thức học kỳ.</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => applyPreset('pure_essay')}
+                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer text-left flex flex-col gap-1 hover:border-rose-350 shadow-3xs"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[11px] font-black text-slate-800">Tự Luận Chuyên Sâu</span>
+                  <span className="text-[9px] bg-rose-50 text-rose-700 px-1 py-0.2 rounded font-bold">Tư Duy</span>
+                </div>
+                <span className="text-[10px] text-rose-700 font-bold">4 câu tự luận chuyên sâu</span>
+                <span className="text-[9px] text-slate-400 mt-0.5 leading-snug">Đặc tuyển kiểm nghiệm kỹ năng lập luận, chứng minh bài bản chi tiết.</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* L: PARAM FORM */}
           <div className="flex flex-col gap-4">
             <h3 className="font-extrabold text-slate-800 text-sm uppercase tracking-wider">Thông số giáo vụ</h3>
@@ -719,38 +831,45 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
             </div>
 
             <div className="border-t border-slate-200 pt-3">
-              <div className="flex border-b border-slate-200 pb-2 mb-3 items-center justify-between">
-                <span className="block text-xs font-bold text-slate-500 uppercase">Loại định dạng câu hỏi trong đề</span>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11.5px] text-amber-900 leading-relaxed font-sans mb-3 flex items-start gap-2">
+                <span className="text-sm shrink-0">💡</span>
+                <div>
+                  <strong>Tính năng tự do thiết kế:</strong> Thầy cô toàn quyền tích chọn, thêm bớt và kéo chỉnh số lượng câu hỏi của bất kỳ dạng đề nào (MCQ, Đúng/Sai, Điền từ ngắn, Tự luận) cùng biểu điểm chi tiết bằng các công cụ bên dưới. Các mẫu định sẵn (như Công văn 7991) chỉ là gợi ý tiện ích khởi hành nhanh, hoàn toàn không bị ép buộc hay giới hạn.
+                </div>
+              </div>
+
+              <div className="flex border-b border-slate-100 pb-2.5 mb-3 items-center justify-between">
+                <span className="block text-[13px] font-extrabold text-slate-700 tracking-wide uppercase font-sans">Loại định dạng câu hỏi trong đề</span>
                 
-                <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
+                <div className="flex bg-[#f1f3f9] p-0.5 rounded-xl text-[10.5px] font-bold">
                   <button
                     type="button"
                     onClick={() => updateFormatParams(aiParams.formats, aiParams.formatCount, aiParams.formatPercent, 'percent')}
-                    className={`px-2 py-1 rounded-md transition-all cursor-pointer ${aiParams.configMode === 'percent' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${aiParams.configMode === 'percent' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
                     Tính theo Tỷ lệ (%)
                   </button>
                   <button
                     type="button"
                     onClick={() => updateFormatParams(aiParams.formats, aiParams.formatCount, aiParams.formatPercent, 'count')}
-                    className={`px-2 py-1 rounded-md transition-all cursor-pointer ${aiParams.configMode === 'count' ? 'bg-white text-emerald-800 shadow-xs' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${aiParams.configMode === 'count' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
                     Tính theo Số câu
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-extrabold text-slate-400">THIẾT LẬP PHÂN LOẠI</span>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10.5px] font-extrabold text-slate-450 uppercase tracking-wider font-sans">THIẾT LẬP PHÂN LOẠI</span>
                 {aiParams.configMode === 'count' ? (
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  <span className="text-[11px] font-extrabold px-3 py-1 rounded-full bg-[#e6fcf5] text-[#0ca678] border border-[#c3fae8]/50">
                     TỔNG SỐ CÂU: {aiParams.numQuestions} câu
                   </span>
                 ) : (
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                  <span className={`text-[11px] font-extrabold px-3 py-1 rounded-full ${
                     Object.keys(aiParams.formatPercent || {}).filter(k => aiParams.formats.includes(k as QuestionType)).reduce((s, k) => s + (aiParams.formatPercent?.[k] || 0), 0) === 100 
-                      ? 'bg-emerald-100 text-emerald-800' 
-                      : 'bg-amber-100 text-amber-850 animate-pulse'
+                      ? 'bg-[#e6fcf5] text-[#0ca678]' 
+                      : 'bg-[#fff9db] text-[#f59f00] animate-pulse'
                   }`}>
                     TỔNG TỶ LỆ: {Object.keys(aiParams.formatPercent || {}).filter(k => aiParams.formats.includes(k as QuestionType)).reduce((s, k) => s + (aiParams.formatPercent?.[k] || 0), 0)}%
                   </span>
@@ -758,21 +877,23 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
               </div>
               
               <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-700 font-bold font-sans">
+                <div className="grid grid-cols-2 gap-3 text-xs text-slate-700 font-bold font-sans">
                   {['MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'SHORT_ESSAY'].map((fmt) => {
                     const isChecked = aiParams.formats.includes(fmt as QuestionType);
                     const currentPercent = aiParams.formatPercent?.[fmt] || 0;
                     const currentCount = aiParams.formatCount?.[fmt] || 0;
                     
                     return (
-                      <div key={fmt} className={`p-2.5 rounded-xl border transition-all flex flex-col justify-between ${
-                        isChecked ? 'bg-emerald-50/40 border-emerald-300 shadow-xs' : 'bg-white border-slate-200 hover:bg-slate-50'
+                      <div key={fmt} className={`p-4 rounded-2xl border transition-all flex flex-col justify-between min-h-[96px] ${
+                        isChecked 
+                          ? 'bg-[#edfcf7] border-[#42d3a5] shadow-xs' 
+                          : 'bg-white border-slate-200 hover:bg-slate-50/70'
                       }`}>
-                        <label className="flex items-start gap-1.5 cursor-pointer select-none">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
                           <input 
                             type="checkbox" 
                             checked={isChecked}
-                            className="rounded text-emerald-600 focus:ring-emerald-500 mt-0.5"
+                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4 h-[15px] w-[15px] cursor-pointer"
                             onChange={(e) => {
                               const active = e.target.checked;
                               const fmts = [...aiParams.formats];
@@ -794,18 +915,17 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
                               updateFormatParams(fmts, counts, percents, aiParams.configMode || 'count');
                             }}
                           />
-                          <span className="truncate leading-tight">{
+                          <span className="truncate text-[13px] font-bold text-slate-800 tracking-wide">{
                             fmt === 'MCQ' ? 'Bốn lựa chọn' :
                             fmt === 'TRUE_FALSE' ? 'Đúng/Sai' :
-                            fmt === 'SHORT_ANSWER' ? 'Điền từ ngắn' :
-                            fmt === 'MATCHING' ? 'Ghép cặp' : 'Tự luận'
+                            fmt === 'SHORT_ANSWER' ? 'Điền từ ngắn' : 'Tự luận'
                           }</span>
                         </label>
                         
-                        {isChecked && (
-                          <div className="mt-2 text-right">
-                            {aiParams.configMode === 'count' ? (
-                              <div className="flex items-center justify-end gap-1 bg-emerald-50 rounded-lg p-0.5 border border-emerald-100 max-w-max ml-auto shadow-xs">
+                        <div className="flex justify-end mt-2">
+                          {isChecked ? (
+                            aiParams.configMode === 'count' ? (
+                              <div className="flex items-center gap-1 bg-white rounded-xl p-0.5 border border-[#c3fae8] shadow-xs max-w-max">
                                 <button 
                                   type="button"
                                   onClick={(e) => {
@@ -815,11 +935,11 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
                                     counts[fmt] = Math.max(1, (counts[fmt] || 1) - 1);
                                     updateFormatParams(aiParams.formats, counts, aiParams.formatPercent, 'count');
                                   }}
-                                  className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-800 flex items-center justify-center font-extrabold text-[10px] hover:bg-slate-50 cursor-pointer shadow-xs select-none"
+                                  className="w-[22px] h-[22px] rounded bg-white border border-slate-200 text-slate-800 flex items-center justify-center font-extrabold text-[12px] hover:bg-slate-50 cursor-pointer shadow-none select-none transition-colors"
                                 >
                                   -
                                 </button>
-                                <span className="text-[10px] px-1.5 font-bold font-mono text-emerald-950">
+                                <span className="text-[11.5px] px-2 font-bold font-sans text-slate-700 min-w-[45px] text-center">
                                   {currentCount} câu
                                 </span>
                                 <button 
@@ -831,18 +951,48 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
                                     counts[fmt] = (counts[fmt] || 0) + 1;
                                     updateFormatParams(aiParams.formats, counts, aiParams.formatPercent, 'count');
                                   }}
-                                  className="w-5 h-5 rounded-md bg-white border border-slate-200 text-slate-800 flex items-center justify-center font-extrabold text-[10px] hover:bg-slate-50 cursor-pointer shadow-xs select-none"
+                                  className="w-[22px] h-[22px] rounded bg-white border border-slate-200 text-slate-800 flex items-center justify-center font-extrabold text-[12px] hover:bg-slate-50 cursor-pointer shadow-none select-none transition-colors"
                                 >
                                   +
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
-                                {currentPercent}%
-                              </span>
-                            )}
-                          </div>
-                        )}
+                              <div className="flex items-center gap-1 bg-white rounded-xl p-0.5 border border-[#c3fae8] shadow-xs max-w-max">
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const percents = { ...(aiParams.formatPercent || { MCQ: 100, TRUE_FALSE: 0, SHORT_ANSWER: 0, SHORT_ESSAY: 0 }) };
+                                    percents[fmt] = Math.max(0, (percents[fmt] || 0) - 5);
+                                    updateFormatParams(aiParams.formats, aiParams.formatCount, percents, 'percent');
+                                  }}
+                                  className="w-[22px] h-[22px] rounded bg-white border border-slate-200 text-slate-800 flex items-center justify-center font-extrabold text-[12px] hover:bg-slate-50 cursor-pointer shadow-none select-none transition-colors"
+                                >
+                                  -
+                                </button>
+                                <span className="text-[11.5px] px-2 font-bold font-sans text-slate-700 min-w-[45px] text-center">
+                                  {currentPercent}%
+                                </span>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    const percents = { ...(aiParams.formatPercent || { MCQ: 100, TRUE_FALSE: 0, SHORT_ANSWER: 0, SHORT_ESSAY: 0 }) };
+                                    percents[fmt] = Math.min(100, (percents[fmt] || 0) + 5);
+                                    updateFormatParams(aiParams.formats, aiParams.formatCount, percents, 'percent');
+                                  }}
+                                  className="w-[22px] h-[22px] rounded bg-white border border-slate-200 text-slate-800 flex items-center justify-center font-extrabold text-[12px] hover:bg-slate-50 cursor-pointer shadow-none select-none transition-colors"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )
+                          ) : (
+                            <span className="text-[10.5px] text-slate-400 italic font-medium py-1">Tắt dạng này</span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -962,7 +1112,7 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
                 Chủ động gán điểm cơ sở cho từng dạng câu khi sinh hoặc trích lọc đề mới để phân chia trọng số:
               </p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 {/* MCQ */}
                 <div className="bg-white p-2.5 rounded-xl border border-slate-200/85 flex flex-col gap-1.5 shadow-2xs">
                   <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide truncate">Bốn lựa chọn</span>
@@ -1004,7 +1154,7 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
                     <button 
                       type="button"
                       onClick={() => setFormatPoints(prev => ({ ...prev, TRUE_FALSE: Math.round((prev.TRUE_FALSE + 0.25) * 100) / 100 }))}
-                      className="w-5 h-5 rounded bg-white border border-slate-200 text-slate-750 flex items-center justify-center font-extrabold text-[10px] hover:bg-slate-100 cursor-pointer select-none"
+                      className="w-5 h-5 rounded bg-white border border-slate-200 text-slate-755 flex items-center justify-center font-extrabold text-[10px] hover:bg-slate-100 cursor-pointer select-none"
                     >
                       +
                     </button>
@@ -1034,7 +1184,31 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
                         const nextV = Math.round((prev.SHORT_ANSWER + 0.25) * 100) / 100;
                         return { ...prev, SHORT_ANSWER: nextV, FILL_BLANK: nextV };
                       })}
+                      className="w-5 h-5 rounded bg-white border border-slate-200 text-slate-755 flex items-center justify-center font-extrabold text-[10px] hover:bg-slate-100 cursor-pointer select-none"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* SHORT_ESSAY */}
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200/85 flex flex-col gap-1.5 shadow-2xs">
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wide truncate">Tự luận lý thuyết</span>
+                  <div className="flex items-center justify-between gap-1 bg-slate-50 rounded-lg p-0.5 border border-slate-200 shadow-3xs">
+                    <button 
+                      type="button"
+                      onClick={() => setFormatPoints(prev => ({ ...prev, SHORT_ESSAY: Math.max(0, Math.round((prev.SHORT_ESSAY - 0.25) * 100) / 100) }))}
                       className="w-5 h-5 rounded bg-white border border-slate-200 text-slate-750 flex items-center justify-center font-extrabold text-[10px] hover:bg-slate-100 cursor-pointer select-none"
+                    >
+                      -
+                    </button>
+                    <span className="text-[11px] font-black font-mono text-slate-800">
+                      {(formatPoints.SHORT_ESSAY !== undefined ? formatPoints.SHORT_ESSAY : 1.0)}đ
+                    </span>
+                    <button 
+                      type="button"
+                      onClick={() => setFormatPoints(prev => ({ ...prev, SHORT_ESSAY: Math.round(((prev.SHORT_ESSAY !== undefined ? prev.SHORT_ESSAY : 1.0) + 0.25) * 100) / 100 }))}
+                      className="w-5 h-5 rounded bg-white border border-slate-200 text-slate-755 flex items-center justify-center font-extrabold text-[10px] hover:bg-slate-100 cursor-pointer select-none"
                     >
                       +
                     </button>
@@ -1100,7 +1274,8 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* CONTENT TAB 2: MANUAL BUILDER */}
       {subTab === 'manual' && (
@@ -1182,7 +1357,12 @@ export const TestGenerator: React.FC<TestGeneratorProps> = ({
                     <td className="p-3 font-mono text-slate-500 font-bold">{q.id}</td>
                     <td className="p-3 font-semibold text-slate-700">
                       <div className="flex flex-col">
-                        <span>{q.type}</span>
+                        <span>
+                          {q.type === 'MCQ' ? 'Trắc nghiệm (MCQ)' :
+                           q.type === 'TRUE_FALSE' ? 'Đúng/Sai (TF)' :
+                           q.type === 'SHORT_ANSWER' ? 'Trả lời ngắn (SHORT)' :
+                           q.type === 'SHORT_ESSAY' ? 'Tự luận (ESSAY)' : q.type}
+                        </span>
                         <span className="text-[10px] text-emerald-600 bg-emerald-50/75 px-1 py-0.2 rounded w-max mt-0.5">{q.level}</span>
                       </div>
                     </td>

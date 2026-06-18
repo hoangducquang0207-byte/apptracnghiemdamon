@@ -1,0 +1,599 @@
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Tổng của hai đa thức $A$ và $B$ được kí hiệu là:
+A. $A+B$
+B. $A-B$
+C. $A\cdot B$
+D. $A:B$
+Đáp án: A
+Lời giải: Đáp án đúng là phương án A.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Hiệu của hai đa thức $A$ và $B$ được kí hiệu là:
+A. $A+B$
+B. $A-B$
+C. $A\cdot B$
+D. $B+A$
+Đáp án: B
+Lời giải: Đáp án đúng là phương án B.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Khi cộng hai đa thức, sau khi bỏ dấu ngoặc ta thường:
+A. chỉ giữ hạng tử bậc cao nhất
+B. đổi dấu tất cả các hạng tử
+C. nhóm các hạng tử đồng dạng rồi thu gọn
+D. nhân các số mũ với nhau
+Đáp án: C
+Lời giải: Đáp án đúng là phương án C.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Khi tính $A-B$, ta cần:
+A. giữ nguyên dấu các hạng tử của $B$
+B. đổi dấu các hạng tử của $A$
+C. nhân $A$ với $B$
+D. đổi dấu các hạng tử của $B$ rồi cộng với $A$
+Đáp án: D
+Lời giải: Đáp án đúng là phương án D.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Kết quả của phép cộng hai đa thức là:
+A. một đa thức
+B. một phân thức
+C. một số nguyên dương
+D. một căn thức
+Đáp án: A
+Lời giải: Đáp án đúng là phương án A.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Kết quả của phép trừ hai đa thức là:
+A. một đơn thức bậc nhất
+B. một đa thức
+C. một số tự nhiên
+D. một phân số
+Đáp án: B
+Lời giải: Đáp án đúng là phương án B.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Đẳng thức đúng với mọi đa thức $P$ là:
+A. $P+P=P$
+B. $P-0=0$
+C. $P+0=P$
+D. $0-P=P$
+Đáp án: C
+Lời giải: Đáp án đúng là phương án C.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: MCQ
+Câu: Đa thức đối của $3x^2-2x+5$ là:
+A. $3x^2+2x-5$
+B. $-3x^2-2x+5$
+C. $3x^2-2x-5$
+D. $-3x^2+2x-5$
+Đáp án: D
+Lời giải: Đáp án đúng là phương án D.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: MCQ
+Câu: Cho $A=2 x + 3 y$ và $B=5 x - y$. Đa thức $A+B$ bằng:
+A. $7 x + 2 y$
+B. $7 x + 2 y + 1$
+C. $7 x + 2 y - 2$
+D. $- 7 x - 2 y$
+Đáp án: A
+Lời giải: Đáp án đúng là phương án A.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: MCQ
+Câu: Cho $A=4 x^{2} - 3 x + 1$ và $B=x^{2} + 2 x - 5$. Đa thức $A-B$ bằng:
+A. $3 x^{2} - 5 x + 7$
+B. $3 x^{2} - 5 x + 6$
+C. $3 x^{2} - 5 x + 4$
+D. $- 3 x^{2} + 5 x - 6$
+Đáp án: B
+Lời giải: Đáp án đúng là phương án B.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: MCQ
+Câu: Cho $A=3 x y - 2 x + 5$ và $B=- x y + 4 x - 1$. Đa thức $A+B$ bằng:
+A. $2 x y + 2 x + 5$
+B. $2 x y + 2 x + 2$
+C. $2 x y + 2 x + 4$
+D. $- 2 x y - 2 x - 4$
+Đáp án: C
+Lời giải: Đáp án đúng là phương án C.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: MCQ
+Câu: Cho $A=5 x^{2} y - 3 x y + 2$ và $B=2 x^{2} y + x y - 7$. Đa thức $A+B$ bằng:
+A. $7 x^{2} y - 2 x y - 4$
+B. $7 x^{2} y - 2 x y - 7$
+C. $- 7 x^{2} y + 2 x y + 5$
+D. $7 x^{2} y - 2 x y - 5$
+Đáp án: D
+Lời giải: Đáp án đúng là phương án D.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: MCQ
+Câu: Cho $A=6 x^{2} - 2 x + 1$ và $B=4 x^{2} + 3 x - 5$. Đa thức $A+B$ bằng:
+A. $10 x^{2} + x - 4$
+B. $10 x^{2} + x - 3$
+C. $10 x^{2} + x - 6$
+D. $- 10 x^{2} - x + 4$
+Đáp án: A
+Lời giải: Đáp án đúng là phương án A.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: MCQ
+Câu: Cho $A=7 x y - 2 y + 3$ và $B=2 x y + 5 y - 1$. Đa thức $A-B$ bằng:
+A. $5 x y - 7 y + 5$
+B. $5 x y - 7 y + 4$
+C. $5 x y - 7 y + 2$
+D. $- 5 x y + 7 y - 4$
+Đáp án: B
+Lời giải: Đáp án đúng là phương án B.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: MCQ
+Câu: Cho $A=2 x^{2} y - 3 x y + 4$ và $B=- 5 x^{2} y + x y - 1$. Đa thức $A+B$ bằng:
+A. $- 3 x^{2} y - 2 x y + 4$
+B. $- 3 x^{2} y - 2 x y + 1$
+C. $- 3 x^{2} y - 2 x y + 3$
+D. $3 x^{2} y + 2 x y - 3$
+Đáp án: C
+Lời giải: Đáp án đúng là phương án C.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: MCQ
+Câu: Cho $A=3 x^{2} - x y + 2 y^{2}$ và $B=x^{2} + 2 x y - y^{2}$. Đa thức $A-B$ bằng:
+A. $2 x^{2} - 3 x y + 3 y^{2} + 1$
+B. $2 x^{2} - 3 x y + 3 y^{2} - 2$
+C. $- 2 x^{2} + 3 x y - 3 y^{2}$
+D. $2 x^{2} - 3 x y + 3 y^{2}$
+Đáp án: D
+Lời giải: Đáp án đúng là phương án D.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: MCQ
+Câu: Cho $A=4 x^{3} - 2 x^{2} + x - 6$ và $B=4 x^{3} + x^{2} - 3 x + 2$. Đa thức $A-B$ bằng:
+A. $- 3 x^{2} + 4 x - 8$
+B. $- 3 x^{2} + 4 x - 7$
+C. $- 3 x^{2} + 4 x - 10$
+D. $3 x^{2} - 4 x + 8$
+Đáp án: A
+Lời giải: Đáp án đúng là phương án A.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng cao
+Dạng: MCQ
+Câu: Cho $A=mx^2+3x-1$ và $B=2x^2-mx+4$. Nếu hệ số của $x^2$ trong $A+B$ bằng $5$, thì $m$ bằng:
+A. $2$
+B. $3$
+C. $5$
+D. $7$
+Đáp án: B
+Lời giải: Đáp án đúng là phương án B.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: TF
+Câu: Xét các khẳng định về phép cộng, trừ đa thức:
+a) Tổng của hai đa thức $A$ và $B$ được kí hiệu là $A+B$.
+b) Hiệu của hai đa thức $A$ và $B$ được kí hiệu là $A-B$.
+c) Tổng của hai đa thức luôn là một đơn thức.
+d) Khi tính $A-B$, ta giữ nguyên mọi dấu của $B$.
+Đáp án: Đúng,Đúng,Sai,Sai
+Lời giải: Tổng và hiệu của hai đa thức đều là đa thức; khi trừ phải đổi dấu đa thức bị trừ.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: TF
+Câu: Xét các khẳng định về hạng tử đồng dạng:
+a) $2x$ và $5x$ là hai hạng tử đồng dạng.
+b) $2x$ và $2y$ là hai hạng tử đồng dạng.
+c) $-3xy$ và $7xy$ là hai hạng tử đồng dạng.
+d) $x^2$ và $x$ là hai hạng tử đồng dạng.
+Đáp án: Đúng,Sai,Đúng,Sai
+Lời giải: Hạng tử đồng dạng phải có cùng phần biến.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: TF
+Câu: Xét các khẳng định về đa thức không:
+a) $P+0=P$.
+b) $P-P=0$.
+c) Đa thức không có bậc bằng $0$.
+d) $0-P=P$.
+Đáp án: Đúng,Đúng,Sai,Sai
+Lời giải: Đa thức không không có bậc xác định; $0-P=-P$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: TF
+Câu: Xét các khẳng định khi bỏ dấu ngoặc:
+a) $A+(B-C)=A+B-C$.
+b) $A-(B+C)=A-B-C$.
+c) $A-(B-C)=A-B-C$.
+d) $-(A+B)=-A+B$.
+Đáp án: Đúng,Đúng,Sai,Sai
+Lời giải: Dấu trừ trước ngoặc làm đổi dấu tất cả hạng tử trong ngoặc.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: TF
+Câu: Xét các khẳng định về tính chất phép cộng đa thức:
+a) $A+B=B+A$.
+b) $(A+B)+C=A+(B+C)$.
+c) Nếu $A-B=C$ thì $A=B+C$.
+d) Nếu $A+B=C$ thì $A=B-C$.
+Đáp án: Đúng,Đúng,Đúng,Sai
+Lời giải: Từ $A+B=C$ suy ra $A=C-B$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: TF
+Câu: Cho $A=2 x + y$ và $B=3 x - 4 y$. Xét các khẳng định:
+a) $A+B=5 x - 3 y$.
+b) $A-B=- x + 5 y$.
+c) Bậc của $A+B$ là $1$.
+d) Hạng tử tự do của $A-B$ là $0$.
+Đáp án: Đúng,Đúng,Đúng,Đúng
+Lời giải: Thu gọn được $A+B=5 x - 3 y$ và $A-B=- x + 5 y$ rồi xét từng khẳng định.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: TF
+Câu: Cho $A=4 x^{2} - 3 x + 2$ và $B=x^{2} + x - 5$. Xét các khẳng định:
+a) $A+B=5 x^{2} - 2 x - 3$.
+b) $A-B=3 x^{2} - 4 x + 7$.
+c) Bậc của $A+B$ là $1$.
+d) Hạng tử tự do của $A-B$ là $0$.
+Đáp án: Đúng,Đúng,Sai,Sai
+Lời giải: Thu gọn được $A+B=5 x^{2} - 2 x - 3$ và $A-B=3 x^{2} - 4 x + 7$ rồi xét từng khẳng định.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: TF
+Câu: Cho $A=x y + 2 x - y$ và $B=3 x y - x + 4 y$. Xét các khẳng định:
+a) $A+B=4 x y + x + 3 y$.
+b) $A-B=- 2 x y + 3 x - 5 y$.
+c) Bậc của $A+B$ là $1$.
+d) Hạng tử tự do của $A-B$ là $0$.
+Đáp án: Đúng,Đúng,Sai,Đúng
+Lời giải: Thu gọn được $A+B=4 x y + x + 3 y$ and $A-B=- 2 x y + 3 x - 5 y$ rồi xét từng khẳng định.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: TF
+Câu: Cho $A=5 x^{3} - 2 x + 1$ và $B=- 5 x^{3} + x^{2} + x - 4$. Xét các khẳng định:
+a) $A+B=x^{2} - x - 3$.
+b) $A-B=10 x^{3} - x^{2} - 3 x + 5$.
+c) Bậc của $A+B$ là $1$.
+d) Hạng tử tự do của $A-B$ là $0$.
+Đáp án: Đúng,Đúng,Sai,Sai
+Lời giải: Thu gọn được $A+B=x^{2} - x - 3$ và $A-B=10 x^{3} - x^{2} - 3 x + 5$ rồi xét từng khẳng định.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: TF
+Câu: Cho $A=2 x^{2} - x y + y^{2}$ và $B=- x^{2} + 3 x y - 2 y^{2}$. Xét các khẳng định:
+a) $A+B=x^{2} + 2 x y - y^{2}$.
+b) $A-B=3 x^{2} - 4 x y + 3 y^{2}$.
+c) Bậc của $A+B$ là $1$.
+d) Hạng tử tự do của $A-B$ là $0$.
+Đáp án: Đúng,Đúng,Sai,Đúng
+Lời giải: Thu gọn được $A+B=x^{2} + 2 x y - y^{2}$ và $A-B=3 x^{2} - 4 x y + 3 y^{2}$ rồi xét từng khẳng định.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: TF
+Câu: Cho $A=m x + 3 x^{2} - 5$ và $B=2 x^{2} - 4 x + 1$. Xét các khẳng định:
+a) $A+B=m x + 5 x^{2} - 4 x - 4$.
+b) Nếu hệ số của $x$ trong $A+B$ bằng $0$ thì $m=4$.
+c) Nếu hệ số của $x$ trong $A+B$ bằng $3$ thì $m=7$.
+d) Khi $m=4$, đa thức $A+B$ có bậc $0$.
+Đáp án: Đúng,Đúng,Đúng,Sai
+Lời giải: Ta có $A+B=5x^2+(m-4)x-4$. Các điều kiện suy ra $m=4$ hoặc $m=7$; đa thức vẫn có bậc $2$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng cao
+Dạng: TF
+Câu: Cho $A=a x^{2} + 2 x - 3$ và $B=x^{2} \left(3 - a\right) - 5 x + 1$. Xét các khẳng định:
+a) $A+B=3 x^{2} - 3 x - 2$.
+b) $A+B$ không phụ thuộc vào $a$.
+c) Bậc của $A+B$ là $1$.
+d) Nếu hệ số của $x^2$ trong $A-B$ bằng $1$ thì $a=2$.
+Đáp án: Đúng,Đúng,Sai,Đúng
+Lời giải: Ta có $A+B=3x^2-3x-2$ và $A-B=(2a-3)x^2+7x-4$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: SHORT
+Câu: Tính số hạng tử của đa thức $P=3x^2-2xy+y^2-5$ sau khi thu gọn.
+Đáp án: 4
+Lời giải: Đa thức có bốn hạng tử.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: SHORT
+Câu: Tìm bậc của đa thức $Q=5x^3-2x^2y+7$.
+Đáp án: 3
+Lời giải: Bậc cao nhất của các hạng tử là $3$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: SHORT
+Câu: Cho $A=2x+3$ và $B=5x-1$. Hệ số của $x$ trong $A+B$ là bao nhiêu?
+Đáp án: 7
+Lời giải: $A+B=7x+2$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: SHORT
+Câu: Cho $A=4x^2-3x+2$, $B=x^2+5x-6$. Tính hạng tử tự do của $A+B$.
+Đáp án: -4
+Lời giải: $A+B=5x^2+2x-4$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: SHORT
+Câu: Cho $P=7xy-3y+1$, $Q=2xy+y-5$. Hệ số của $y$ trong $P-Q$ là bao nhiêu?
+Đáp án: -4
+Lời giải: $P-Q=5xy-4y+6$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: SHORT
+Câu: Cho $M=2x^2+x-3$ và $N=-2x^2+4x+8$. Tính giá trị của $M+N$ tại $x=2$.
+Đáp án: 15
+Lời giải: $M+N=5x+5$, thay $x=2$ được $15$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: SHORT
+Câu: Cho $A=3x^2y-2xy+4$ và $B=-x^2y+5xy-9$. Hệ số của $xy$ trong $A+B$ là bao nhiêu?
+Đáp án: 3
+Lời giải: $A+B=2x^2y+3xy-5$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: SHORT
+Câu: Cho $P=2x^2-3x+1$, $Q=x^2+x-4$. Tính giá trị của $P-Q$ tại $x=-1$.
+Đáp án: 10
+Lời giải: $P-Q=x^2-4x+5$, tại $x=-1$ bằng $10$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: SHORT
+Câu: Cho $A=5x^2-2xy+y^2$ và $B=3x^2+4xy-2y^2$. Tính tổng các hệ số của đa thức $A-B$.
+Đáp án: -1
+Lời giải: $A-B=2x^2-6xy+3y^2$, tổng hệ số là $-1$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: SHORT
+Câu: Cho $M=4x^3-2x^2+x-7$ và $N=4x^3+3x^2-2x+5$. Tính tổng hệ số của đa thức $M-N$.
+Đáp án: -14
+Lời giải: $M-N=-5x^2+3x-12$, tổng hệ số là $-14$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng cao
+Dạng: SHORT
+Câu: Cho $A=mx^2+2x-1$ và $B=3x^2-mx+5$. Biết hệ số của $x^2$ trong $A+B$ bằng $7$. Tính $m$.
+Đáp án: 4
+Lời giải: $A+B=(m+3)x^2+(2-m)x+4$, nên $m=4$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng cao
+Dạng: SHORT
+Câu: Cho $P=ax^2+3x+2$ và $Q=(5-a)x^2-7x+1$. Tính giá trị của $P+Q$ tại $x=0.5$, làm tròn một chữ số thập phân.
+Đáp án: 2.3
+Lời giải: $P+Q=5x^2-4x+3$. Tại $x=0.5$ được $2.25$, làm tròn là $2.3$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Nêu quy tắc cộng hai đa thức và lấy một ví dụ minh họa bằng hai đa thức đơn giản.
+Đáp án: Học sinh nêu đúng quy tắc và ví dụ phù hợp.
+Lời giải: Cộng hai đa thức là bỏ dấu ngoặc, nhóm các hạng tử đồng dạng rồi thu gọn.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Nêu quy tắc trừ hai đa thức và giải thích vì sao khi bỏ ngoặc sau dấu trừ phải đổi dấu các hạng tử trong ngoặc.
+Đáp án: Học sinh nêu đúng quy tắc trừ đa thức.
+Lời giải: Khi tính $A-B$, ta cộng $A$ with đa thức đối của $B$, nên phải đổi dấu các hạng tử của $B$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Cho $P=3x^2-2xy+y-5$. Hãy chỉ ra các hạng tử và bậc của đa thức $P$.
+Đáp án: Các hạng tử là $3x^2$, $-2xy$, $y$, $-5$; bậc $2$.
+Lời giải: Hạng tử có bậc cao nhất là $3x^2$ hoặc $-2xy$, đều có bậc $2$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Cho $A=2x^2-3x+1$ và $B=x^2+4x-5$. Hãy lập biểu thức biểu thị tổng $A+B$ rồi nêu các bước cần làm để thu gọn.
+Đáp án: $A+B=(2x^2-3x+1)+(x^2+4x-5)$.
+Lời giải: Bỏ ngoặc, nhóm các hạng tử đồng dạng rồi thu gọn.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Cho $M=5xy-2y+4$ và $N=3xy+y-1$. Hãy lập biểu thức biểu thị hiệu $M-N$ rồi nêu các bước cần làm để thu gọn.
+Đáp án: $M-N=(5xy-2y+4)-(3xy+y-1)$.
+Lời giải: Bỏ ngoặc, đổi dấu các hạng tử của $N$, nhóm đồng dạng rồi thu gọn.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Giải thích vì sao $2x^2-3xy+5$ là một đa thức và cho biết số hạng tử của nó.
+Đáp án: Là tổng của các đơn thức; có $3$ hạng tử.
+Lời giải: Các hạng tử là $2x^2$, $-3xy$ và $5$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Cho hai đa thức $A$ và $B$. Hãy viết đẳng thức thể hiện tính giao hoán của phép cộng đa thức.
+Đáp án: $A+B=B+A$.
+Lời giải: Phép cộng đa thức có tính giao hoán tương tự phép cộng các số.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Nhận biết
+Dạng: ESSAY
+Câu: Cho $P=4x^2-2x+7$. Hãy viết đa thức đối của $P$ và giải thích cách tìm.
+Đáp án: $-P=-4x^2+2x-7$.
+Lời giải: Đổi dấu tất cả các hạng tử của $P$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: ESSAY
+Câu: Cho $A=3x^2-2x+5$ và $B=2x^2+7x-1$. Tính $A+B$ và $A-B$.
+Đáp án: $A+B=5x^2+5x+4$; $A-B=x^2-9x+6$.
+Lời giải: Bỏ ngoặc rồi cộng hoặc trừ các hạng tử đồng dạng.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: ESSAY
+Câu: Cho $P=4xy-3y+2$ và $Q=-xy+5y-6$. Tính $P+Q$ and $P-Q$.
+Đáp án: $P+Q=3xy+2y-4$; $P-Q=5xy-8y+8$.
+Lời giải: Cộng hoặc trừ các hệ số của hạng tử đồng dạng.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: ESSAY
+Câu: Cho $M=2x^2y-3xy^2+xy-1$ và $N=-x^2y+5xy^2-4xy+3$. Tính $M+N$ rồi xác định bậc của đa thức thu được.
+Đáp án: $M+N=x^2y+2xy^2-3xy+2$; bậc $3$.
+Lời giải: Hạng tử có bậc cao nhất là $x^2y$ và $xy^2$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Thông hiểu
+Dạng: ESSAY
+Câu: Cho $A=5x^3-2x+1$ và $B=5x^3+x^2-3x+1$. Tính $A-B$ rồi xác định bậc của kết quả.
+Đáp án: $A-B=-x^2+x$; bậc $2$.
+Lời giải: Các hạng tử $5x^3$ triệt tiêu nhau.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: ESSAY
+Câu: Cho $A=2x^2-3xy+y^2$ và $B=-x^2+5xy-4y^2$. Tính $A+B$ và giá trị của $A+B$ tại $x=2$, $y=-1$.
+Đáp án: $A+B=x^2+2xy-3y^2$; giá trị bằng $-3$.
+Lời giải: Thay $x=2$, $y=-1$ vào đa thức thu gọn được $4-4-3=-3$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: ESSAY
+Câu: Cho $P=3x^2-2x+1$ và $Q=x^2+4x-5$. Tìm đa thức $R$ biết $P+R=Q$.
+Đáp án: $R=Q-P=-2x^2+6x-6$.
+Lời giải: Từ $P+R=Q$ suy ra $R=Q-P$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: ESSAY
+Câu: Cho $A=4x^2+xy-2y^2$ và $B=2x^2-3xy+y^2$. Tính $A-B$ rồi tính giá trị tại $x=1$, $y=2$.
+Đáp án: $A-B=2x^2+4xy-3y^2$; giá trị bằng $-2$.
+Lời giải: Thay $x=1$, $y=2$ được $2+8-12=-2$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng
+Dạng: ESSAY
+Câu: Một hình chữ nhật có chiều dài $3x+2$ và chiều rộng $x-1$. Một hình chữ nhật khác có chu vi $4x+6$. Viết biểu thức tổng chu vi của hai hình rồi thu gọn.
+Đáp án: $12x+8$.
+Lời giải: Chu vi hình thứ nhất là $2[(3x+2)+(x-1)]=8x+2$. Tổng là $12x+8$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng cao
+Dạng: ESSAY
+Câu: Cho $A=ax^2+3x-2$ và $B=(4-a)x^2+(a-1)x+5$. Tính $A+B$. Tìm $a$ để hệ số của $x$ trong $A+B$ bằng $6$.
+Đáp án: $A+B=4x^2+(a+2)x+3$; $a=4$.
+Lời giải: Hệ số của $x$ là $a+2$, nên $a+2=6$.
+
+Chương: chuong-1
+Bài: Phép cộng và phép trừ đa thức
+Mức độ: Vận dụng cao
+Dạng: ESSAY
+Câu: Cho $P=mx^2-2x+1$ và $Q=3x^2+(m-5)x-4$. Tìm $m$ để đa thức $P-Q$ không còn hạng tử bậc hai, rồi tính $P-Q$ khi đó.
+Đáp án: $m=3$; khi đó $P-Q=5$.
+Lời giải: $P-Q=(m-3)x^2+(3-m)x+5$. Để không còn hạng tử bậc hai thì $m=3$.
